@@ -5,7 +5,7 @@ import {
   Droppable,
   OnDragEndResponder,
 } from "react-beautiful-dnd";
-import { Item } from "../typings";
+import { Item } from "@/types";
 
 export type DraggableListProps = {
   items: Item[];

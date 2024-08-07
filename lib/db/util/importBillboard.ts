@@ -10,7 +10,7 @@ dotenv.config({ path: '.env.local' });
 
 // Constants
 const DIRECTORY_PATH = '/home/greg/Documents/wrikMusicTrivia/import/test';
-const TESTING = true; // Set this to false to process all files
+const TESTING = false; // Set this to false to process all files
 const NUM_HASH_FUNCTIONS = 100; // Number of hash functions for MinHash
 
 // Function to read TSV file

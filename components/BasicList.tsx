@@ -18,8 +18,8 @@ import {
   Send,
   Email,
 } from "@mui/icons-material";
-import { testSongs } from "../lib/utils.js";
-import { Item } from "../typings";
+import { testSongs } from "@/lib/utils";
+import { Item } from "@/types";
 
 interface Song {
   id: string;

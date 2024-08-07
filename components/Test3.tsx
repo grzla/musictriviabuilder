@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { testSongs } from "../lib/utils.js";
+import { testSongs } from "@/lib/utils";
 
 const Test3 = () => {
   const [songlist, setSonglist] = useState(testSongs);

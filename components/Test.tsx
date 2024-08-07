@@ -5,7 +5,8 @@ import DraggableList from "../components/DraggableList";
 import DraggableListItem from "../components/DraggableListItem";
 import { DropResult } from "react-beautiful-dnd";
 import { getItems, reorder } from "../helpers";
-import { Item } from "../typings";
+import { Item } from "@/types";
+
 import {
   DragDropContext,
   Droppable,

@@ -1,6 +1,6 @@
 import { Schema, model, models } from "mongoose";
 
-const SongSchema = new Schema({
+const BillboardSongSchema = new Schema({
   artist: { type: String, required: false },
   title: { type: String, required: false },
   year: { type: Number, required: false, default: null },
@@ -19,6 +19,6 @@ const SongSchema = new Schema({
 });
 
 
-const Song = models?.Song || model("Song", SongSchema);
+const BillboardSong = models?.BillboardSong || model("BillboardSong", BillboardSongSchema);
 
-export default Song;
+export default BillboardSong;

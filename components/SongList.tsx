@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-// import { Item } from "../typings";
-import { testSongs } from "../lib/utils.js";
+// import { Item } from "@/types";
+import { testSongs } from "@/lib/utils";
 import DraggableList from "./DraggableList.tsx";
 import DraggableListItem from "./BasicList.tsx";
 
