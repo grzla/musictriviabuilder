@@ -27,7 +27,8 @@ export async function GET() {
         rows.map(row => ({
           title: row.Title,
           artist: row.Artist,
-          year: row.Year
+          year: row.Year,
+          rank: row.Ranking
         }))
       );
   
