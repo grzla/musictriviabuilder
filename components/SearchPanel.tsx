@@ -1,19 +1,14 @@
-import React from "react";
-import SearchBar from "./SearchBar";
+import React, { useState } from "react";
+import SearchBar2 from "./SearchBar2";
 import SearchResults from "./SearchResults";
 import { Box, Grid } from "@mui/material";
 
 const SearchPanel = () => {
+  const [query, setQuery] = useState("");
   return (
-    <div className="flex min-h-screen flex-col items-center justify-between p-24">
-      <Box>
-        {/* <Grid container spacing={0} sx={{ mt: "2px" }}> */}
-        {/* <Item sx={{ flexGrow: "3" }}> */}
-        <SearchBar />
-        <SearchResults />
-        {/* </Item> */}
-        {/* </Grid> */}
-      </Box>
+    <div>
+      <SearchBar2 query={query} setQuery={setQuery} />
+      <SearchResults query={query} />
     </div>
   );
 };

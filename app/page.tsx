@@ -6,6 +6,7 @@ import BasicList from "../components/BasicList";
 import CommandBar from "../components/CommandBar";
 import SearchBar from "../components/SearchBar";
 import SearchResults from "@/components/SearchResults";
+import SearchPanel from "@/components/SearchPanel";
 import { Box, Grid, Paper } from "@mui/material";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -26,8 +27,9 @@ export default function Home() {
             <BasicList />
           </Item>
           <Item sx={{ flexGrow: "3" }}>
-            <SearchBar />
-            <SearchResults />
+            {/* <SearchBar /> */}
+            {/* <SearchResults /> */}
+            <SearchPanel />
           </Item>
         </Grid>
       </Box>

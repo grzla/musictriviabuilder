@@ -25,6 +25,7 @@ export async function GET() {
   
       const songs: SongParams[] = results.flatMap(([rows]) => 
         rows.map(row => ({
+          id: row.Id,
           title: row.Title,
           artist: row.Artist,
           year: row.Year,
