@@ -1,4 +1,5 @@
 import * as React from "react";
+import { SongParams } from "@/types";
 import { styled } from "@mui/material/styles";
 import {
   Box,
@@ -18,22 +19,42 @@ import {
   Send,
   Email,
 } from "@mui/icons-material";
-import { testSongs } from "@/lib/utils";
-import { Item } from "@/types";
 
-interface Song {
-  id: string;
-  artist: string;
-  title: string;
-  year: number;
-  rank?: number;
-  releaseYear?: number | null;
-}
+// Fetch songs from the API
+const fetchSongs = async (): Promise<SongParams[]> => {
+  const res = await fetch("/api/round", {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch songs");
+  }
+
+  const contentType = res.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    throw new Error("Expected JSON response");
+  }
+
+  return res.json();
+};
 
 const BasicList = () => {
-  const [songlist, setSonglist] = React.useState(testSongs);
+  const [songlist, setSonglist] = React.useState<SongParams[]>([]);
 
-  const deleteSong = (id) => {
+  React.useEffect(() => {
+    const getSongs = async () => {
+      try {
+        const songs = await fetchSongs();
+        setSonglist(songs);
+      } catch (error) {
+        console.error("Error fetching songs:", error);
+      }
+    };
+
+    getSongs();
+  }, []);
+
+  const deleteSong = (id: string) => {
     setSonglist(songlist.filter((song) => song.id !== id));
   };
 
