@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface SearchBarProps {
   query: string;
@@ -11,12 +11,14 @@ const SearchBar2: React.FC<SearchBarProps> = ({ query, setQuery }) => {
   };
 
   return (
-    <input
-      type="text"
-      value={query}
-      onChange={handleInputChange}
-      placeholder="Search..."
-    />
+    <div>
+      <input
+        type="text"
+        value={query}
+        onChange={handleInputChange}
+        placeholder="Search..."
+      />
+    </div>
   );
 };
 

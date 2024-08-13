@@ -2,19 +2,20 @@ import React from "react";
 import { Box } from "@mui/material";
 
 interface SearchResultsProps {
-  query: string;
+  results: any[];
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({ query }) => {
+const SearchResults: React.FC<SearchResultsProps> = ({ results }) => {
   // Placeholder for actual search results logic
-  const results = ["Result 1", "Result 2", "Result 3"].filter((result) =>
-    result.toLowerCase().includes(query.toLowerCase())
-  );
 
   return (
     <Box>
       {results.length > 0 ? (
-        results.map((result, index) => <div key={index}>{result}</div>)
+        results.map((result, index) => (
+          <li key={index}>
+            {result.Artist} - {result.Title} ({result.Year})
+          </li>
+        ))
       ) : (
         <div>No results found</div>
       )}

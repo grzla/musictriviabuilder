@@ -38,24 +38,15 @@ const fetchSongs = async (): Promise<SongParams[]> => {
   return res.json();
 };
 
-const BasicList = () => {
-  const [songlist, setSonglist] = React.useState<SongParams[]>([]);
+interface BasicListProps {
+  songlist: SongParams[];
+}
 
-  React.useEffect(() => {
-    const getSongs = async () => {
-      try {
-        const songs = await fetchSongs();
-        setSonglist(songs);
-      } catch (error) {
-        console.error("Error fetching songs:", error);
-      }
-    };
+const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
+  const [songs, setSongs] = React.useState<SongParams[]>(songlist);
 
-    getSongs();
-  }, []);
-
-  const deleteSong = (id: string) => {
-    setSonglist(songlist.filter((song) => song.id !== id));
+  const deleteSong = (id: number) => {
+    setSongs(songs.filter((song) => song.id !== id));
   };
 
   return (

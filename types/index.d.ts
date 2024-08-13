@@ -1,13 +1,13 @@
 export type Status = 'played' | 'unplayed' | 'donotplay' | null;
 
 export type Item = {
-  id: string;
+  id: number;
   primary: string;
   secondary: string;
 };
 
 export type SongParams = {
-  id?: number;
+  id: number;
   artist: string;
   title: string;
   year?: number;
