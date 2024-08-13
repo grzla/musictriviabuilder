@@ -7,6 +7,14 @@ export type Item = {
 };
 
 export type SongParams = {
+  id?: number;
+  artist: string;
+  title: string;
+  year?: number;
+  rank?: number;
+};
+/*
+export type SongParams = {
   // id: string;
   artist: string;
   title: string;
@@ -15,11 +23,11 @@ export type SongParams = {
   releaseYear?: number | null;
   status?: Status;
   datePlayed?: Date | null;
-  normalizedArtist?: string;
-  normalizedTitle?: string;
-  hash?: Number[];
+  normalizedArtist?: string | null;
+  normalizedTitle?: string | null;
+  // hash?: Number[];
 };
-
+*/
 /* union types
 export type SongParams = {
   // id: string;
