@@ -7,11 +7,12 @@ export type Item = {
 };
 
 export type SongParams = {
-  id: number;
+  id: number | null;
   artist: string;
   title: string;
-  year?: number;
-  rank?: number;
+  year: number | null;
+  rank: number | null;
+  releaseYear: number | null;
 };
 /*
 export type SongParams = {

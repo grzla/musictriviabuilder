@@ -34,10 +34,12 @@ export async function GET(req: NextRequest) {
         });
 
         const query = `
-            SELECT DISTINCT * FROM librarysongs
-            WHERE ${whereClauses.join(' AND ')}
-            LIMIT 10
-        `;
+        SELECT MIN(id) as id, Artist, Title, Year
+        FROM librarysongs
+        WHERE ${whereClauses.join(' AND ')}
+        GROUP BY Artist, Title, Year
+        LIMIT 10;
+    `;
 
         console.log('Executing query...');
         const [results] = await connection.query(query);
