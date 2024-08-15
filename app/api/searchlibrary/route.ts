@@ -1,3 +1,4 @@
+import { SongParams } from '@/types/index.d';
 'use server'
 /*
 takes artist and title in request body, returns matches from library using best available search method
@@ -7,6 +8,8 @@ import { connectToSql } from "@/lib/db/mysql";
 import { NextRequest, NextResponse } from "next/server";
 import { RowDataPacket } from 'mysql2/promise';
 
+
+  
 export async function GET(req: NextRequest) {
     let connection: any;
     try {
@@ -31,13 +34,27 @@ export async function GET(req: NextRequest) {
         });
 
         const query = `
-            SELECT * FROM librarysongs
+            SELECT DISTINCT * FROM librarysongs
             WHERE ${whereClauses.join(' AND ')}
             LIMIT 10
         `;
 
         console.log('Executing query...');
         const [results] = await connection.query(query);
+        
+        // remove duplicates 
+        /*
+        const uniqueResults = Array.from(
+            new Set(results.map((r: SongParams) => `${r.artist}|${r.title}`))
+          ).map(key => {
+            const [artist, title] = key.split('|');
+            return results.find((r: SongParams) => r.artist === artist && r.title === title)
+            .filter((r: SongParams) => r != null);;
+          });
+          
+          const songs = uniqueResults;
+        */
+        
         console.log('Query executed successfully.');
 
         const songs = results;
