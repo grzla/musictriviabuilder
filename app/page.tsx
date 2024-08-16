@@ -7,7 +7,7 @@ import CommandBar from "../components/CommandBar";
 import SearchBar from "../components/SearchBar";
 import SearchResults from "@/components/SearchResults";
 import SearchPanel from "@/components/SearchPanel";
-import { Box, Grid, Paper } from "@mui/material";
+import { Box, CircularProgress, Grid, Paper } from "@mui/material";
 import { SongParams } from "@/types";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -20,34 +20,23 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function Home() {
   const [songlist, setSonglist] = React.useState<SongParams[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchSongs = async () => {
-      const res = await fetch("/api/round", {
-        cache: "no-store",
-      });
-      if (!res.ok) {
-        throw new Error("Failed to fetch songs");
-      }
-
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Expected JSON response");
-      }
-
-      return res.json();
-    };
-
-    const getSongs = async () => {
       try {
-        const songs = await fetchSongs();
+        const res = await fetch("/api/round", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch songs");
+        const songs = await res.json();
         setSonglist(songs);
       } catch (error) {
         console.error("Error fetching songs:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    getSongs();
+    fetchSongs();
   }, []);
 
   return (
@@ -56,9 +45,13 @@ export default function Home() {
         <Grid container spacing={0} sx={{ mt: "2px" }}>
           <Item sx={{ flexGrow: "6" }}>
             <CommandBar />
-            <BasicList songlist={songlist} />
+            {isLoading ? (
+              <CircularProgress />
+            ) : (
+              <BasicList songlist={songlist} />
+            )}
           </Item>
-          <Item sx={{ flexGrow: "3" }}>
+          <Item sx={{ flexGrow: "3", width: "500px" }}>
             {/* <SearchBar /> */}
             {/* <SearchResults /> */}
             <SearchPanel />

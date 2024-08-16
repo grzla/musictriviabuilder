@@ -29,6 +29,7 @@ export async function GET() {
           title: row.Title,
           artist: row.Artist,
           year: row.Year,
+          releaseYear: null,
           rank: row.Ranking
         }))
       );

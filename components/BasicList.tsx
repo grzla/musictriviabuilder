@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { SongParams } from "@/types";
 import { styled } from "@mui/material/styles";
@@ -20,30 +22,17 @@ import {
   Email,
 } from "@mui/icons-material";
 
-// Fetch songs from the API
-const fetchSongs = async (): Promise<SongParams[]> => {
-  const res = await fetch("/api/round", {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch songs");
-  }
-
-  const contentType = res.headers.get("content-type");
-  if (!contentType || !contentType.includes("application/json")) {
-    throw new Error("Expected JSON response");
-  }
-
-  return res.json();
-};
-
 interface BasicListProps {
   songlist: SongParams[];
 }
 
 const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
   const [songs, setSongs] = React.useState<SongParams[]>(songlist);
+
+  // Log initial state
+  React.useEffect(() => {
+    console.log("Initial songs state:", songs);
+  }, []);
 
   const deleteSong = (id: number) => {
     setSongs(songs.filter((song) => song.id !== id));
@@ -52,9 +41,10 @@ const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
   return (
     <Box>
       <List>
-        {songlist.map((song, index) => (
+        {songs.map((song, index) => (
           <ListItem
             key={song.id}
+            dense={true}
             secondaryAction={
               <>
                 <IconButton edge="end" aria-label="move up">

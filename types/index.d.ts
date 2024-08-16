@@ -7,7 +7,7 @@ export type Item = {
 };
 
 export type SongParams = {
-  id: number | null;
+  id: number;
   artist: string;
   title: string;
   year: number | null;
