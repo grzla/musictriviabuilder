@@ -20,6 +20,7 @@ export async function GET() {
       ];
       */
   // /*
+  // select 10 songs from billboard which are not in usedsongs or donotplay
       const queries = [
         `SELECT * FROM billboardsongs 
          WHERE year < 1980 
