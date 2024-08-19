@@ -1,5 +1,4 @@
-'use server'
-import React from 'react'
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { SongParams } from '@/types/index.d';
 import { connectToSql } from "@/lib/db/mysql";
 import { NextRequest, NextResponse } from "next/server";
