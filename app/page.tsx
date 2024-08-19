@@ -44,11 +44,11 @@ export default function Home() {
       <Box>
         <Grid container spacing={0} sx={{ mt: "2px" }}>
           <Item sx={{ flexGrow: "6" }}>
-            <CommandBar />
+            <CommandBar songlist={songlist} setSonglist={setSonglist} />
             {isLoading ? (
               <CircularProgress />
             ) : (
-              <BasicList songlist={songlist} />
+              <BasicList songlist={songlist} setSonglist={setSonglist} />
             )}
           </Item>
           <Item sx={{ flexGrow: "3", width: "500px" }}>

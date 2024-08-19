@@ -28,9 +28,10 @@ import {
 
 interface BasicListProps {
   songlist: SongParams[];
+  setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
 }
 
-const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
+const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
   const [songs, setSongs] = React.useState<SongParams[]>(songlist);
 
   // Log initial state
@@ -38,8 +39,28 @@ const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
     console.log("Initial songs state:", songs);
   }, []);
 
+  const moveItemUp = (index: number) => {
+    if (index === 0) return; // Can't move the first item up
+    const newSongs = [...songs];
+    [newSongs[index - 1], newSongs[index]] = [
+      newSongs[index],
+      newSongs[index - 1],
+    ];
+    setSonglist(newSongs);
+  };
+
+  const moveItemDown = (index: number) => {
+    if (index === songs.length - 1) return; // Can't move the last item down
+    const newSongs = [...songs];
+    [newSongs[index + 1], newSongs[index]] = [
+      newSongs[index],
+      newSongs[index + 1],
+    ];
+    setSonglist(newSongs);
+  };
+
   const deleteSong = (id: number) => {
-    setSongs(songs.filter((song) => song.id !== id));
+    setSonglist(songs.filter((song) => song.id !== id));
   };
 
   const replaceSong = async (song: SongParams) => {
@@ -61,7 +82,7 @@ const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
       }
 
       // Update the songlist state with the new song
-      setSongs((prevSongs) => {
+      setSonglist((prevSongs) => {
         const songIndex = prevSongs.findIndex((s) => s.id === id);
         if (songIndex === -1) {
           console.log(`Song with ID ${id} not found in the list.`);
@@ -80,16 +101,24 @@ const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
   return (
     <Box>
       <List>
-        {songs.map((song, index) => (
+        {songlist.map((song, index) => (
           <ListItem
             key={`${song.id}-${index}`}
             dense={true}
             secondaryAction={
               <>
-                <IconButton edge="end" aria-label="move up">
+                <IconButton
+                  edge="end"
+                  aria-label="move up"
+                  onClick={() => moveItemUp(index)}
+                >
                   <ArrowUpward />
                 </IconButton>
-                <IconButton edge="end" aria-label="move down">
+                <IconButton
+                  edge="end"
+                  aria-label="move down"
+                  onClick={() => moveItemDown(index)}
+                >
                   <ArrowDownward />
                 </IconButton>
                 <Tooltip title="Replace">
@@ -120,7 +149,7 @@ const BasicList: React.FC<BasicListProps> = ({ songlist }) => {
           >
             <ListItemText
               primary={song.title}
-              secondary={`${song.artist} | Rank: ${song.rank}`}
+              secondary={`${song.artist} | Rank: ${song.ranking}`}
             />
           </ListItem>
         ))}

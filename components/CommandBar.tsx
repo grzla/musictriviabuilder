@@ -4,8 +4,14 @@ import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import SearchBar from "./SearchBar.tsx";
+import { SongParams } from "@/types/index.js";
 
-function CommandBar() {
+interface CommandBarProps {
+  songlist: SongParams[];
+  setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+}
+
+function CommandBar({ songlist, setSonglist }: CommandBarProps) {
   const handleReload = () => {
     console.log("Reload action");
     // Implement reload action
@@ -22,13 +28,32 @@ function CommandBar() {
   };
 
   const handleExport = () => {
-    console.log("Export action");
-    // Implement export action
+    const formattedSonglist = songlist
+      .map((song) => {
+        const releaseYear = song.releaseYear ? `(${song.releaseYear})` : "";
+        return `${song.artist} - ${song.title} ${releaseYear}`;
+      })
+      .join("\n");
+
+    navigator.clipboard
+      .writeText(formattedSonglist)
+      .then(() => {
+        console.log("Songlist copied to clipboard");
+      })
+      .catch((err) => {
+        console.error("Failed to copy songlist: ", err);
+      });
   };
 
   const handleShuffle = () => {
-    console.log("Shuffle action");
-    // Implement shuffle action
+    setSonglist((prevList) => {
+      const newList = [...prevList];
+      for (let i = newList.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newList[i], newList[j]] = [newList[j], newList[i]];
+      }
+      return newList;
+    });
   };
 
   const commands = [

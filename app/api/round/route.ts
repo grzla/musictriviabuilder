@@ -61,7 +61,7 @@ export async function GET() {
           artist: row.artist,
           year: row.year,
           releaseYear: null,
-          rank: row.ranking
+          ranking: row.ranking
         }))
       );
   
