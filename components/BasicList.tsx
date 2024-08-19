@@ -38,6 +38,29 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
   React.useEffect(() => {
     console.log("Initial songs state:", songs);
   }, []);
+  const [embeds, setEmbeds] = React.useState<string[]>([]);
+
+  // Fetch embeds when songlist changes
+  React.useEffect(() => {
+    const fetchEmbeds = async () => {
+      try {
+        const response = await fetch("/api/fetchpreviews", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(songlist),
+        });
+
+        const data = await response.json();
+        setEmbeds(data.embeds);
+      } catch (error) {
+        console.error("Failed to fetch Spotify embeds:", error);
+      }
+    };
+
+    fetchEmbeds();
+  }, [songlist]);
 
   const moveItemUp = (index: number) => {
     if (index === 0) return; // Can't move the first item up
@@ -175,6 +198,7 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
               primary={song.title}
               secondary={`${song.artist} | Rank: ${song.ranking}`}
             />
+            <div dangerouslySetInnerHTML={{ __html: embeds[index] || "" }} />
           </ListItem>
         ))}
       </List>
