@@ -10,7 +10,7 @@ Get 10 random songs from the billboardsongs table.
 export async function GET() {
     try {
       const connection = await connectToSql();
-      
+      /* original query
       const queries = [
         "SELECT * FROM billboardsongs WHERE year < 1980 ORDER BY RAND() LIMIT 2",
         "SELECT * FROM billboardsongs WHERE year >= 1980 AND year < 1990 ORDER BY RAND() LIMIT 2",
@@ -18,7 +18,37 @@ export async function GET() {
         "SELECT * FROM billboardsongs WHERE year >= 2000 AND year < 2010 ORDER BY RAND() LIMIT 2",
         "SELECT * FROM billboardsongs WHERE year >= 2010 ORDER BY RAND() LIMIT 2"
       ];
-  
+      */
+  // /*
+      const queries = [
+        `SELECT * FROM billboardsongs 
+         WHERE year < 1980 
+         AND NOT EXISTS (SELECT 1 FROM usedsongs WHERE usedsongs.Artist = billboardsongs.Artist AND usedsongs.Title = billboardsongs.Title) 
+         AND NOT EXISTS (SELECT 1 FROM donotplay WHERE donotplay.Artist = billboardsongs.Artist AND donotplay.Title = billboardsongs.Title) 
+         ORDER BY RAND() LIMIT 2`,
+        `SELECT * FROM billboardsongs 
+         WHERE year >= 1980 AND year < 1990 
+         AND NOT EXISTS (SELECT 1 FROM usedsongs WHERE usedsongs.Artist = billboardsongs.Artist AND usedsongs.Title = billboardsongs.Title) 
+         AND NOT EXISTS (SELECT 1 FROM donotplay WHERE donotplay.Artist = billboardsongs.Artist AND donotplay.Title = billboardsongs.Title) 
+         ORDER BY RAND() LIMIT 2`,
+        `SELECT * FROM billboardsongs 
+         WHERE year >= 1990 AND year < 2000 
+         AND NOT EXISTS (SELECT 1 FROM usedsongs WHERE usedsongs.Artist = billboardsongs.Artist AND usedsongs.Title = billboardsongs.Title) 
+         AND NOT EXISTS (SELECT 1 FROM donotplay WHERE donotplay.Artist = billboardsongs.Artist AND donotplay.Title = billboardsongs.Title) 
+         ORDER BY RAND() LIMIT 2`,
+        `SELECT * FROM billboardsongs 
+         WHERE year >= 2000 AND year < 2010 
+         AND NOT EXISTS (SELECT 1 FROM usedsongs WHERE usedsongs.Artist = billboardsongs.Artist AND usedsongs.Title = billboardsongs.Title) 
+         AND NOT EXISTS (SELECT 1 FROM donotplay WHERE donotplay.Artist = billboardsongs.Artist AND donotplay.Title = billboardsongs.Title) 
+         ORDER BY RAND() LIMIT 2`,
+        `SELECT * FROM billboardsongs 
+         WHERE year >= 2010 
+         AND NOT EXISTS (SELECT 1 FROM usedsongs WHERE usedsongs.Artist = billboardsongs.Artist AND usedsongs.Title = billboardsongs.Title) 
+         AND NOT EXISTS (SELECT 1 FROM donotplay WHERE donotplay.Artist = billboardsongs.Artist AND donotplay.Title = billboardsongs.Title) 
+         ORDER BY RAND() LIMIT 2`
+      ];
+      // */
+      
       const results = await Promise.all(queries.map(query => 
         connection.execute<RowDataPacket[]>(query)
       ));
