@@ -1,9 +1,9 @@
+"use client";
 import React from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import SearchBar from "./SearchBar.tsx";
 import { SongParams } from "@/types/index.js";
 
 interface CommandBarProps {
@@ -17,9 +17,25 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
     // Implement reload action
   };
 
-  const handleFinalize = () => {
-    console.log("Finalize action");
-    // Implement finalize action
+  const handleFinalize = async () => {
+    try {
+      const response = await fetch("/api/usedsongs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(songlist),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("Songs finalized successfully:", result);
+    } catch (error) {
+      console.error("Error finalizing songs:", error);
+    }
   };
 
   const handleFetchYear = () => {
