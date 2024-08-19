@@ -17,9 +17,26 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
     // Implement reload action
   };
 
-  const handleFinalize = () => {
+  const handleFinalize = async () => {
     console.log("Finalize action");
-    // Implement finalize action
+    try {
+      const response = await fetch("/api/usedsongs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(songlist),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to finalize songlist");
+      }
+
+      const result = await response.json();
+      console.log("Songlist finalized:", result);
+    } catch (error) {
+      console.error("Error finalizing songlist:", error);
+    }
   };
 
   const handleFetchYear = () => {
