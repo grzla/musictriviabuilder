@@ -56,11 +56,11 @@ export async function GET() {
       const songs: SongParams[] = results.flatMap(([rows]) => 
         rows.map(row => ({
           id: row.id,
-          title: row.Title,
-          artist: row.Artist,
-          year: row.Year,
+          title: row.title,
+          artist: row.artist,
+          year: row.year,
           releaseYear: null,
-          rank: row.Ranking
+          rank: row.ranking
         }))
       );
   

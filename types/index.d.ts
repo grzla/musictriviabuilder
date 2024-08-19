@@ -11,7 +11,7 @@ export type SongParams = {
   artist: string;
   title: string;
   year: number | null;
-  rank: number | null;
+  ranking: number | null;
   releaseYear: number | null;
 };
 /*

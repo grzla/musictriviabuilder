@@ -1,5 +1,6 @@
 <!-- eslint-disable -->
 
+ALTER TABLE billboardsongs CHANGE COLUMN Artist artist VARCHAR(255),CHANGE COLUMN Title title VARCHAR(255),CHANGE COLUMN Year year SMALLINT,CHANGE COLUMN ReleaseYear releaseYear SMALLINT;
 // prettier-ignore
 
 <!-- prettier-ignore -->
@@ -12,6 +13,7 @@ musictriviabuilder.usedSongs
 musictrivia TODO
 
 implement usedSongs
+
 - create table
 - import usedSongs
 
@@ -20,6 +22,7 @@ implement donotplay
 implement requestsongs
 
 update round endpoint
+
 - results in librarysongs
 - results not in usedsongs
 - results not in donotplay
@@ -27,6 +30,7 @@ update round endpoint
 implement getSong(year) endpoint
 
 implement list ui features
+
 - up/down (drag?)
 - add to requestsongs
 - replace song
@@ -35,11 +39,13 @@ implement list ui features
 - mark for trivia/decades (not now)
 
 implement game ui features
+
 - fetch release year
 - shuffle
 - decades round
 - export (to clipboard/to pptx)
 
 future features
+
 - spotify integration
 - ai recommendation
