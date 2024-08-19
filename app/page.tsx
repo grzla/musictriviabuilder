@@ -7,7 +7,7 @@ import CommandBar from "../components/CommandBar";
 import SearchBar from "../components/SearchBar";
 import SearchResults from "@/components/SearchResults";
 import SearchPanel from "@/components/SearchPanel";
-import { Box, CircularProgress, Grid, Paper } from "@mui/material";
+import { Box, CircularProgress, Grid, Paper, Typography } from "@mui/material";
 import { SongParams } from "@/types";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -54,7 +54,11 @@ export default function Home() {
           <Item sx={{ flexGrow: "3", width: "500px" }}>
             {/* <SearchBar /> */}
             {/* <SearchResults /> */}
-            <SearchPanel />
+            {songlist && songlist.length > 0 ? (
+              <SearchPanel songlist={songlist} setSonglist={setSonglist} />
+            ) : (
+              <Typography variant="body2">Loading songlist...</Typography>
+            )}{" "}
           </Item>
         </Grid>
       </Box>

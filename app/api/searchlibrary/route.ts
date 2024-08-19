@@ -34,10 +34,10 @@ export async function GET(req: NextRequest) {
         });
 
         const query = `
-        SELECT MIN(id) as id, Artist, Title, Year
+        SELECT MIN(id) as id, artist, title, year
         FROM librarysongs
         WHERE ${whereClauses.join(' AND ')}
-        GROUP BY Artist, Title, Year
+        GROUP BY artist, title, year
         LIMIT 10;
     `;
 
@@ -61,7 +61,14 @@ export async function GET(req: NextRequest) {
 
         const songs = results;
         // console.log(`Fetched songs: ${JSON.stringify(songs)}`);
-
+/*
+        const songs: SongParams[] = results.map(result => ({
+            id: result.id,
+            artist: result.artist,
+            title: result.title,
+            year: result.year
+        }));
+*/
         return NextResponse.json(songs, { status: 200 });
     } catch (error) {
         console.error('Error fetching songs:', error);

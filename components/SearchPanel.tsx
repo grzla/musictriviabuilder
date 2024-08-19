@@ -2,8 +2,14 @@ import React, { useState, useEffect } from "react";
 import SearchBar2 from "./SearchBar2";
 import SearchResults from "./SearchResults";
 import { Box, Grid } from "@mui/material";
+import { SongParams } from "@/types";
 
-const SearchPanel = () => {
+interface SearchPanelProps {
+  songlist: SongParams[];
+  setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+}
+
+const SearchPanel: React.FC<SearchPanelProps> = ({ songlist, setSonglist }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
 
@@ -34,7 +40,11 @@ const SearchPanel = () => {
   return (
     <div>
       <SearchBar2 query={query} setQuery={setQuery} />
-      <SearchResults results={results} />
+      <SearchResults
+        results={results}
+        songlist={songlist}
+        setSonglist={setSonglist}
+      />
     </div>
   );
 };
