@@ -41,26 +41,28 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
 
   const moveItemUp = (index: number) => {
     if (index === 0) return; // Can't move the first item up
-    const newSongs = [...songs];
-    [newSongs[index - 1], newSongs[index]] = [
-      newSongs[index],
-      newSongs[index - 1],
-    ];
-    setSonglist(newSongs);
+    setSonglist((prevSongs) => {
+      const newSongs = [...prevSongs];
+      [newSongs[index - 1], newSongs[index]] = [
+        newSongs[index],
+        newSongs[index - 1],
+      ];
+      console.log("Songs after moving up:", newSongs);
+      return newSongs;
+    });
   };
 
   const moveItemDown = (index: number) => {
-    if (index === songs.length - 1) return; // Can't move the last item down
-    const newSongs = [...songs];
-    [newSongs[index + 1], newSongs[index]] = [
-      newSongs[index],
-      newSongs[index + 1],
-    ];
-    setSonglist(newSongs);
-  };
-
-  const deleteSong = (id: number) => {
-    setSonglist(songs.filter((song) => song.id !== id));
+    setSonglist((prevSongs) => {
+      if (index === prevSongs.length - 1) return prevSongs; // Can't move the last item down
+      const newSongs = [...prevSongs];
+      [newSongs[index + 1], newSongs[index]] = [
+        newSongs[index],
+        newSongs[index + 1],
+      ];
+      console.log("Songs after moving down:", newSongs);
+      return newSongs;
+    });
   };
 
   const replaceSong = async (song: SongParams) => {
@@ -98,6 +100,28 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
     }
   };
 
+  const donotplay = async (song: SongParams) => {
+    try {
+      // const { artist, title, id } = song;
+
+      const response = await fetch("/api/donotplay", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ song }),
+      });
+    } catch (error) {
+      console.error("Failed to add song to do-not-play list:", error);
+    }
+    // Logic to get the new song
+
+    // Add the song to the donotplay list
+
+    // Call replaceSong to handle the replacement logic
+    await replaceSong(song);
+  };
+
   return (
     <Box>
       <List>
@@ -133,8 +157,8 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
                 <Tooltip title="Do not play">
                   <IconButton
                     edge="end"
-                    aria-label="delete"
-                    onClick={() => deleteSong(song.id)}
+                    aria-label="ban"
+                    onClick={() => donotplay(song)}
                   >
                     <DoNotDisturb />
                   </IconButton>
