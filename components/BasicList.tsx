@@ -41,6 +41,7 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
   const [embeds, setEmbeds] = React.useState<string[]>([]);
 
   // Fetch embeds when songlist changes
+  /*
   React.useEffect(() => {
     const fetchEmbeds = async () => {
       try {
@@ -61,6 +62,7 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
 
     fetchEmbeds();
   }, [songlist]);
+  */
 
   const moveItemUp = (index: number) => {
     if (index === 0) return; // Can't move the first item up
@@ -196,7 +198,7 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
           >
             <ListItemText
               primary={song.title}
-              secondary={`${song.artist} | Rank: ${song.ranking}`}
+              secondary={`${song.artist} | ${song.ranking} | ${song.year} | ${song.releaseYear}`}
             />
             <div dangerouslySetInnerHTML={{ __html: embeds[index] || "" }} />
           </ListItem>

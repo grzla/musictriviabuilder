@@ -1,19 +1,15 @@
 'use server'
 import { SongParams } from '@/types/index.d';
-/*
-takes a song parameter, returns a random song from the same decade as the song
-*/
-
 import { connectToSql } from "@/lib/db/mysql";
 import { NextRequest, NextResponse } from "next/server";
+import { PoolConnection } from 'mysql2/promise';
 import { RowDataPacket } from 'mysql2/promise';
 
 
   
 export async function GET(req: NextRequest) {
-    let connection: any;
+    let connection: PoolConnection | null = null;
     try {
-        // console.log('Connecting to the database...');
         connection = await connectToSql();
         // console.log('Connected to the database.');
 
@@ -27,8 +23,8 @@ export async function GET(req: NextRequest) {
         }
 
         // Calculate the start and end years of the decade
-        const startYear: string = Math.floor(year / 10) * 10;
-        const endYear: string = startYear + 9;
+        const startYear: string = (Math.floor(year / 10) * 10).toString();
+        const endYear: string = (Math.floor(year / 10) * 10 + 9).toString();
 
         const query =
             `SELECT * FROM billboardsongs 
@@ -52,14 +48,9 @@ export async function GET(req: NextRequest) {
     } catch (error) {
         console.error('Error fetching songs:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    } 
-    /*
-    finally {
-        if (connection) {
-            console.log('Closing the database connection...');
-            connection.end();
-            console.log('Database connection closed.');
-        }
+    } finally {
+    if (connection) {
+        connection.release();
     }
-        */
+}
 }

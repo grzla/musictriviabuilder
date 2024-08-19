@@ -1,12 +1,13 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+'use server'
 import { SongParams } from '@/types/index.d';
 import { connectToSql } from "@/lib/db/mysql";
 import { NextRequest, NextResponse } from "next/server";
-import { RowDataPacket } from 'mysql2/promise';
+import { PoolConnection } from 'mysql2/promise';
+import { RowDataPacket } from "mysql2";
 
 export async function POST(req: NextRequest) {
-  let connection: any;
-  try {
+    let connection: PoolConnection | null = null;
+    try {
       connection = await connectToSql();
 
       const body: SongParams[] = await req.json();
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   } finally {
       if (connection) {
-          await connection.end();
+        connection.release();
       }
   }
 }

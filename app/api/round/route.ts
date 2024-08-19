@@ -1,15 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+'use server'
+import { SongParams } from '@/types/index.d';
 import { connectToSql } from "@/lib/db/mysql";
+import { NextRequest, NextResponse } from "next/server";
+import { PoolConnection } from 'mysql2/promise';
 import { RowDataPacket } from "mysql2";
-import { SongParams } from "@/types/index"; // Adjust the import path as necessary
 
 /*
 Get 10 random songs from the billboardsongs table.
 2 from pre 1980s (<1980), 2 from 1980-1989, 2 from 1990-1999, 2 from 2000-2009, 2 from post aughts (>2009)
 */
 export async function GET() {
+    let connection: PoolConnection | null = null;
     try {
-      const connection = await connectToSql();
+      connection = await connectToSql();
       /* original query
       const queries = [
         "SELECT * FROM billboardsongs WHERE year < 1980 ORDER BY RAND() LIMIT 2",
@@ -51,7 +54,7 @@ export async function GET() {
       // */
       
       const results = await Promise.all(queries.map(query => 
-        connection.execute<RowDataPacket[]>(query)
+        connection!.execute<RowDataPacket[]>(query)
       ));
   
       const songs: SongParams[] = results.flatMap(([rows]) => 
@@ -69,6 +72,10 @@ export async function GET() {
     } catch (error) {
       console.error('Failed to fetch songs:', error);
       return NextResponse.json({ error: 'Failed to fetch songs' }, { status: 500 });
+    } finally {
+      if (connection) {
+          connection.release();
+      }
     }
   }
 

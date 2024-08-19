@@ -2,11 +2,10 @@
 import { SongParams } from '@/types/index.d';
 import { connectToSql } from "@/lib/db/mysql";
 import { NextRequest, NextResponse } from "next/server";
+import { PoolConnection } from 'mysql2/promise'; // Import the PoolConnection type
 
-
-  
 export async function POST(req: NextRequest) {
-    let connection: any;
+    let connection: PoolConnection | null = null;
     try {
         connection = await connectToSql();
 
@@ -28,13 +27,9 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error('Error fetching songs:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    } 
-    /*
-    finally {
+    } finally {
         if (connection) {
-            await connection.end();
+            connection.release();
         }
     }
-        */
 }
-    

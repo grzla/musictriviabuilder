@@ -1,5 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+'use server'
 import { SongParams } from '@/types';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 const SPOTIFY_ACCESS_TOKEN = process.env.SPOTIFY_ACCESS_TOKEN;
 
