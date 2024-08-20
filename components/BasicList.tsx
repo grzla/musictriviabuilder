@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { SongParams } from "@/types";
 import { styled } from "@mui/material/styles";
@@ -17,6 +15,7 @@ import {
 import {
   AddTask,
   Autorenew,
+  Check,
   Delete,
   DoNotDisturb,
   Edit,
@@ -25,21 +24,24 @@ import {
   Send,
   Email,
 } from "@mui/icons-material";
+import { matchSongToLibrary } from "@/lib/actions/song.actions";
 
 interface BasicListProps {
   songlist: SongParams[];
   setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  searchResults: SongParams[];
+  setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
 }
 
-const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
-  const [songs, setSongs] = React.useState<SongParams[]>(songlist);
+const BasicList: React.FC<BasicListProps> = ({
+  songlist,
+  setSonglist,
+  searchResults,
+  setSearchResults,
+}) => {
   const [selectedItem, setSelectedItem] = React.useState<number | null>(null);
-
-  // Log initial state
-  React.useEffect(() => {
-    console.log("Initial songs state:", songs);
-  }, []);
-  const [embeds, setEmbeds] = React.useState<string[]>([]);
+  const [highlightColors, setHighlightColors] = React.useState<string[]>([]);
+  // const [embeds, setEmbeds] = React.useState<string[]>([]);
 
   // Fetch embeds when songlist changes
   /*
@@ -64,6 +66,42 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
     fetchEmbeds();
   }, [songlist]);
   */
+
+  React.useEffect(() => {
+    const checkMatches = async () => {
+      const colors = await Promise.all(
+        songlist.map(async (song) => {
+          try {
+            const response = await fetch("/api/matchsongtolibrary", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(song),
+            });
+
+            if (response.ok) {
+              const matches = await response.json();
+              return matches.length === 1 ? "lightgreen" : "lightcoral";
+            } else {
+              console.error(
+                "Error fetching library matches:",
+                response.statusText
+              );
+              return "lightcoral";
+            }
+          } catch (error) {
+            console.error("Error fetching library matches:", error);
+            return "lightcoral";
+          }
+        })
+      );
+
+      setHighlightColors(colors);
+    };
+
+    checkMatches();
+  }, [songlist]);
 
   const moveItemUp = (index: number) => {
     if (index === 0) return; // Can't move the first item up
@@ -148,8 +186,60 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
     await replaceSong(song);
   };
 
-  const handleItemClick = (index: number) => {
+  const handleItemClick = async (index: number, song: SongParams) => {
     setSelectedItem(index);
+    try {
+      const response = await fetch("/api/matchsongtolibrary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(song),
+      });
+
+      if (response.ok) {
+        const libMatches = await response.json();
+        setSearchResults(libMatches);
+      } else {
+        console.error("Error fetching library matches:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching library matches:", error);
+    }
+  };
+
+  const confirmInLibrary = (index: number) => {
+    setHighlightColors((prevColors) => {
+      const newColors = [...prevColors];
+      newColors[index] = "lightgreen";
+      return newColors;
+    });
+  };
+
+  const deleteSong = (index: number) => {
+    setSonglist((prevList) => prevList.filter((_, i) => i !== index));
+  };
+
+  const addToRequests = async (song) => {
+    try {
+      const response = await fetch("/api/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ song }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log("Request successful:", data);
+    } catch (error) {
+      console.error("Error requesting song:", error);
+    }
+    await replaceSong(song);
   };
 
   return (
@@ -159,10 +249,9 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
           <ListItem
             key={`${song.id}-${index}`}
             dense={true}
-            onClick={() => handleItemClick(index)}
+            onClick={() => handleItemClick(index, song)}
             style={{
-              backgroundColor:
-                selectedItem === index ? "lightgreen" : "inherit",
+              backgroundColor: highlightColors[index] || "inherit",
             }}
             secondaryAction={
               <>
@@ -189,6 +278,15 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
                     <Autorenew />
                   </IconButton>
                 </Tooltip>
+                <Tooltip title="Confirm in library">
+                  <IconButton
+                    edge="end"
+                    aria-label="confirm"
+                    onClick={() => confirmInLibrary(index)}
+                  >
+                    <Check />
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title="Do not play">
                   <IconButton
                     edge="end"
@@ -199,8 +297,21 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Add to requests">
-                  <IconButton edge="end" aria-label="queue">
+                  <IconButton
+                    edge="end"
+                    aria-label="queue"
+                    onClick={() => addToRequests(song)}
+                  >
                     <AddTask />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Remove from list">
+                  <IconButton
+                    edge="end"
+                    aria-label="ban"
+                    onClick={() => deleteSong(index)}
+                  >
+                    <Delete />
                   </IconButton>
                 </Tooltip>
               </>
@@ -210,7 +321,7 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
               primary={song.title}
               secondary={`${song.artist} | ${song.ranking} | ${song.year} | ${song.releaseYear}`}
             />
-            <div dangerouslySetInnerHTML={{ __html: embeds[index] || "" }} />
+            {/* <div dangerouslySetInnerHTML={{ __html: embeds[index] || "" }} /> */}
           </ListItem>
         ))}
       </List>

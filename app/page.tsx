@@ -49,7 +49,12 @@ export default function Home() {
             {isLoading ? (
               <CircularProgress />
             ) : (
-              <BasicList songlist={songlist} setSonglist={setSonglist} />
+              <BasicList
+                songlist={songlist}
+                setSonglist={setSonglist}
+                searchResults={searchResults}
+                setSearchResults={setSearchResults}
+              />
             )}
           </Item>
           <Item sx={{ flexGrow: "3", width: "500px" }}>
