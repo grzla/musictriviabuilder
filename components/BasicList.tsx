@@ -16,6 +16,7 @@ import {
   AddTask,
   Autorenew,
   Check,
+  ContentPaste,
   Delete,
   DoNotDisturb,
   Edit,
@@ -220,7 +221,7 @@ const BasicList: React.FC<BasicListProps> = ({
     setSonglist((prevList) => prevList.filter((_, i) => i !== index));
   };
 
-  const addToRequests = async (song) => {
+  const addToRequests = async (song: SongParams) => {
     try {
       const response = await fetch("/api/requests", {
         method: "POST",
@@ -242,6 +243,23 @@ const BasicList: React.FC<BasicListProps> = ({
     await replaceSong(song);
   };
 
+  const copyToClipboard = (song: SongParams) => {
+    if (!song) return;
+
+    const artist = song.artist || "Unknown Artist";
+    const title = song.title || "Unknown Title";
+    const textToCopy = `${artist} - ${title}`;
+
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        console.log("Copied to clipboard:", textToCopy);
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
+      });
+  };
+
   return (
     <Box>
       <List>
@@ -255,6 +273,15 @@ const BasicList: React.FC<BasicListProps> = ({
             }}
             secondaryAction={
               <>
+                <Tooltip title="Copy to clipboard">
+                  <IconButton
+                    edge="end"
+                    aria-label="copy"
+                    onClick={() => copyToClipboard(song)}
+                  >
+                    <ContentPaste />
+                  </IconButton>
+                </Tooltip>
                 <IconButton
                   edge="end"
                   aria-label="move up"

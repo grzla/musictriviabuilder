@@ -70,7 +70,14 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
   const handleExport = () => {
     const formattedSonglist = songlist
       .map((song) => {
-        const releaseYear = song.releaseYear ? `(${song.releaseYear})` : "";
+        let releaseYear = "";
+        if (song.releaseYear && song.year) {
+          releaseYear = `(${Math.min(song.releaseYear, song.year)})`;
+        } else if (song.releaseYear) {
+          releaseYear = `(${song.releaseYear})`;
+        } else if (song.year) {
+          releaseYear = `(${song.year})`;
+        }
         return `${song.artist} - ${song.title} ${releaseYear}`;
       })
       .join("\n");
