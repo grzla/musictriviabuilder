@@ -1,23 +1,52 @@
-"use server";
+import { SongParams } from "@/types";
+import { connectToSql } from "@/lib/db/mysql";
+import { PoolConnection } from 'mysql2/promise'; // 
 
-import { revalidatePath } from "next/cache";
 
-import Song from "../db/models/song.model";
-import { connectToDatabase } from "../db/mongoose";
-import { handleError } from "@/lib/utils";
-import { SongParams } from '@/types';
-import chalk from "chalk";
-
-// CREATE
-export async function createSong(song: SongParams) {
+export const matchSongToLibrary = async (song: SongParams): SongParams[] => {
+  
+  let connection: PoolConnection | null = null;
   try {
-    
-    await connectToDatabase();
-    
-    const newSong = await Song.create(song);
+      connection = await connectToSql();
 
-    return JSON.parse(JSON.stringify(newSong));
+      const { artist, title } = song;
+
+      if (!artist && !title) {
+        return []
+      }
+
+    // Tokenize artist and title
+    const artistTokens = artist ? artist.split(/\s+/) : [];
+    const titleTokens = title ? title.split(/\s+/) : [];
+    const searchTokens = [...artistTokens, ...titleTokens];
+
+    // Build the WHERE clause dynamically based on search tokens
+    const whereClauses: string[] = searchTokens.map(token => {
+      const escapedToken = connection!.escape(`%${token}%`);
+      return `(Artist LIKE ${escapedToken} OR Title LIKE ${escapedToken})`;
+    });
+
+    const query = `
+      SELECT MIN(id) as id, artist, title, year
+      FROM librarysongs
+      WHERE ${whereClauses.join(' AND ')}
+      GROUP BY artist, title, year
+      LIMIT 10;
+    `;
+    const [results] = await connection.query(query);
+
+    const songs: SongParams[] = (results as any[]).map((row: any) => ({
+      artist: row.artist,
+      title: row.title,
+    }));
+
+    return songs;
   } catch (error) {
-    handleError(error);
+    console.error('Error fetching songs:', error);
+    return [];
+  } finally {
+    if (connection) {
+      connection.end();
+    }
   }
-}
+};

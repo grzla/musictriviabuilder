@@ -21,6 +21,7 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function Home() {
   const [songlist, setSonglist] = React.useState<SongParams[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [searchResults, setSearchResults] = React.useState<SongParams[]>([]);
 
   React.useEffect(() => {
     const fetchSongs = async () => {
@@ -55,7 +56,12 @@ export default function Home() {
             {/* <SearchBar /> */}
             {/* <SearchResults /> */}
             {songlist && songlist.length > 0 ? (
-              <SearchPanel songlist={songlist} setSonglist={setSonglist} />
+              <SearchPanel
+                songlist={songlist}
+                setSonglist={setSonglist}
+                searchResults={searchResults}
+                setSearchResults={setSearchResults}
+              />
             ) : (
               <Typography variant="body2">Loading songlist...</Typography>
             )}{" "}

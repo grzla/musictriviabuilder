@@ -7,12 +7,17 @@ import { SongParams } from "@/types";
 interface SearchPanelProps {
   songlist: SongParams[];
   setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  searchResults: SongParams[];
+  setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
 }
 
-const SearchPanel: React.FC<SearchPanelProps> = ({ songlist, setSonglist }) => {
+const SearchPanel: React.FC<SearchPanelProps> = ({
+  songlist,
+  setSonglist,
+  searchResults,
+  setSearchResults,
+}) => {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
-
   useEffect(() => {
     const fetchResults = async () => {
       if (query.trim() !== "") {
@@ -25,12 +30,12 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ songlist, setSonglist }) => {
           }
 
           const data = await response.json();
-          setResults(data);
+          setSearchResults(data);
         } catch (error) {
           console.error("Error fetching search results:", error);
         }
       } else {
-        setResults([]);
+        setSearchResults([]);
       }
     };
 
@@ -41,7 +46,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ songlist, setSonglist }) => {
     <div>
       <SearchBar2 query={query} setQuery={setQuery} />
       <SearchResults
-        results={results}
+        searchResults={searchResults}
+        setSearchResults={setSearchResults}
         songlist={songlist}
         setSonglist={setSonglist}
       />

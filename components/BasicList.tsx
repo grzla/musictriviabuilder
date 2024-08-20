@@ -33,6 +33,7 @@ interface BasicListProps {
 
 const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
   const [songs, setSongs] = React.useState<SongParams[]>(songlist);
+  const [selectedItem, setSelectedItem] = React.useState<number | null>(null);
 
   // Log initial state
   React.useEffect(() => {
@@ -147,6 +148,10 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
     await replaceSong(song);
   };
 
+  const handleItemClick = (index: number) => {
+    setSelectedItem(index);
+  };
+
   return (
     <Box>
       <List>
@@ -154,6 +159,11 @@ const BasicList: React.FC<BasicListProps> = ({ songlist, setSonglist }) => {
           <ListItem
             key={`${song.id}-${index}`}
             dense={true}
+            onClick={() => handleItemClick(index)}
+            style={{
+              backgroundColor:
+                selectedItem === index ? "lightgreen" : "inherit",
+            }}
             secondaryAction={
               <>
                 <IconButton

@@ -3,24 +3,26 @@ import { Box, Typography, Button } from "@mui/material";
 import { SongParams } from "@/types";
 
 interface SearchResultsProps {
-  results: SongParams[];
+  searchResults: SongParams[];
+  setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
   songlist: SongParams[];
   setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
-  results,
+  searchResults: searchResults,
+  setSearchResults,
   songlist,
   setSonglist,
 }) => {
-  console.log("Initial songlist:", songlist);
   const addSong = (song: SongParams) => {
     setSonglist([...songlist, song]);
   };
+
   return (
     <Box sx={{ textAlign: "left" }}>
-      {results.length > 0 ? (
-        results.map((result, index) => (
+      {searchResults.length > 0 ? (
+        searchResults.map((result, index) => (
           <Box
             key={index}
             sx={{ display: "flex", alignItems: "center", mb: 1 }}
