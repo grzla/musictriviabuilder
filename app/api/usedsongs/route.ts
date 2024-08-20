@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
               return NextResponse.json({ error: 'Artist and title are required for each song' }, { status: 400 });
           }
 
-          const query = 'INSERT INTO testusedsongs (artist, title, year, releaseYear) VALUES (?, ?, ?, ?)';
+          const query = 'INSERT INTO usedsongs (artist, title, year, releaseYear) VALUES (?, ?, ?, ?)';
           const [result] = await connection.query(query, [artist, title, year, releaseYear]);
           results.push(result);
       }

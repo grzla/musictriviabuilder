@@ -1,9 +1,13 @@
-"use client";
-import React from "react";
+import React, { useState } from "react";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import { SongParams } from "@/types/index.js";
 
 interface CommandBarProps {
@@ -12,12 +16,22 @@ interface CommandBarProps {
 }
 
 function CommandBar({ songlist, setSonglist }: CommandBarProps) {
+  const [open, setOpen] = useState(false);
+
   const handleReload = () => {
     console.log("Reload action");
     // Implement reload action
   };
 
-  const handleFinalize = async () => {
+  const handleOpenModal = () => {
+    setOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpen(false);
+  };
+
+  const handleConfirmFinalize = async () => {
     console.log("Finalize action");
     try {
       const response = await fetch("/api/usedsongs", {
@@ -34,6 +48,7 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
 
       const result = await response.json();
       console.log("Songlist finalized:", result);
+      handleCloseModal();
     } catch (error) {
       console.error("Error finalizing songlist:", error);
     }
@@ -107,30 +122,42 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
     { name: "Reload", handler: handleReload },
     { name: "Shuffle", handler: handleShuffle },
     { name: "Fetch Year", handler: handleFetchYear },
-    { name: "Finalize", handler: handleFinalize },
+    { name: "Finalize", handler: handleOpenModal },
     { name: "Export", handler: handleExport },
   ];
 
   return (
-    // <AppBar position="static">
-    <AppBar sx={{ position: "relative" }}>
-      <Toolbar>
-        {commands.map(
-          (
-            { name, handler } // Corrected destructuring
-          ) => (
-            <Button
-              key={name} // Corrected key assignment
-              color="inherit"
-              onClick={handler} // Corrected onClick assignment
-            >
+    <div>
+      <AppBar sx={{ position: "relative" }}>
+        <Toolbar>
+          {commands.map(({ name, handler }) => (
+            <Button key={name} color="inherit" onClick={handler}>
               {name}
             </Button>
-          )
-        )}
-        {/* <SearchBar /> */}
-      </Toolbar>
-    </AppBar>
+          ))}
+        </Toolbar>
+      </AppBar>
+      <Dialog
+        open={open}
+        onClose={handleCloseModal}
+        aria-labelledby="confirm-finalize-dialog"
+      >
+        <DialogTitle id="confirm-finalize-dialog">Confirm Finalize</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to finalize the songlist?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModal} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmFinalize} color="secondary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
   );
 }
 

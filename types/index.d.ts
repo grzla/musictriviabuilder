@@ -13,6 +13,7 @@ export type SongParams = {
   year: number | null;
   ranking: number | null;
   releaseYear: number | null;
+  inLibrary: boolean | null;
 };
 /*
 export type SongParams = {

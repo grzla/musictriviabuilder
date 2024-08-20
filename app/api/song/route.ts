@@ -23,7 +23,10 @@ export async function GET(req: NextRequest) {
 
         // Calculate the start and end years of the decade
         const startYear: string = (Math.floor(year / 10) * 10).toString();
-        const endYear: string = (Math.floor(year / 10) * 10 + 9).toString();
+        let endYear: string = (Math.floor(year / 10) * 10 + 9).toString();
+        if (parseInt(endYear) < 1980) {
+            endYear = '1979';
+        }
 
         const query =
             `SELECT * FROM billboardsongs 
