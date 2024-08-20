@@ -1,4 +1,3 @@
-'use server'
 import { SongParams } from '@/types';
 import type { NextApiRequest, NextApiResponse } from 'next';
 

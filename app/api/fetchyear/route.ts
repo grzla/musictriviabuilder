@@ -1,4 +1,3 @@
-'use server'
 import { SongParams } from '@/types/index.d';
 import { NextRequest, NextResponse } from "next/server";
 
