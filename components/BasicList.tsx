@@ -34,6 +34,8 @@ interface BasicListProps {
   setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
 }
 
+// const hasCheckedMatches = React.useRef(false);
+
 const BasicList: React.FC<BasicListProps> = ({
   songlist,
   setSonglist,
@@ -41,7 +43,7 @@ const BasicList: React.FC<BasicListProps> = ({
   setSearchResults,
 }) => {
   const [selectedItem, setSelectedItem] = React.useState<number | null>(null);
-  const [highlightColors, setHighlightColors] = React.useState<string[]>([]);
+  const [hasCheckedMatches, setHasCheckedMatches] = React.useState(false);
   // const [embeds, setEmbeds] = React.useState<string[]>([]);
 
   // Fetch embeds when songlist changes
@@ -69,8 +71,9 @@ const BasicList: React.FC<BasicListProps> = ({
   */
 
   React.useEffect(() => {
+    if (hasCheckedMatches) return;
     const checkMatches = async () => {
-      const colors = await Promise.all(
+      const updatedSongs = await Promise.all(
         songlist.map(async (song) => {
           try {
             const response = await fetch("/api/matchsongtolibrary", {
@@ -83,22 +86,23 @@ const BasicList: React.FC<BasicListProps> = ({
 
             if (response.ok) {
               const matches = await response.json();
-              return matches.length === 1 ? "lightgreen" : "lightcoral";
+              song.inLibrary = matches.length === 1;
             } else {
               console.error(
                 "Error fetching library matches:",
                 response.statusText
               );
-              return "lightcoral";
+              song.inLibrary = false;
             }
           } catch (error) {
             console.error("Error fetching library matches:", error);
-            return "lightcoral";
+            // song.inLibrary = false;
           }
+          return song;
         })
       );
-
-      setHighlightColors(colors);
+      setHasCheckedMatches(true);
+      setSonglist(updatedSongs);
     };
 
     checkMatches();
@@ -210,10 +214,10 @@ const BasicList: React.FC<BasicListProps> = ({
   };
 
   const confirmInLibrary = (index: number) => {
-    setHighlightColors((prevColors) => {
-      const newColors = [...prevColors];
-      newColors[index] = "lightgreen";
-      return newColors;
+    setSonglist((prevSongs) => {
+      const newSongs = [...prevSongs];
+      newSongs[index].inLibrary = true;
+      return newSongs;
     });
   };
 
@@ -269,7 +273,7 @@ const BasicList: React.FC<BasicListProps> = ({
             dense={true}
             onClick={() => handleItemClick(index, song)}
             style={{
-              backgroundColor: highlightColors[index] || "inherit",
+              backgroundColor: song.inLibrary ? "lightgreen" : "lightcoral",
             }}
             secondaryAction={
               <>

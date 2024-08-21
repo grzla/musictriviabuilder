@@ -36,8 +36,13 @@ export const POST = async (req: NextRequest) => {
     const [results] = await connection.query(query);
 
     const songs: SongParams[] = (results as any[]).map((row: any) => ({
+      id: row.id,
       artist: row.artist,
       title: row.title,
+      year: row.year,
+      ranking: null,
+      releaseYear: null,
+      inLibrary: null
     }));
 
     return NextResponse.json(songs, { status: 200 });

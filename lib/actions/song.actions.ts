@@ -3,7 +3,7 @@ import { connectToSql } from "@/lib/db/mysql";
 import { PoolConnection } from 'mysql2/promise'; // 
 
 
-export const matchSongToLibrary = async (song: SongParams): SongParams[] => {
+export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]> => {
   
   let connection: PoolConnection | null = null;
   try {
@@ -33,11 +33,17 @@ export const matchSongToLibrary = async (song: SongParams): SongParams[] => {
       GROUP BY artist, title, year
       LIMIT 10;
     `;
+    
     const [results] = await connection.query(query);
 
     const songs: SongParams[] = (results as any[]).map((row: any) => ({
+      id: row.id,
       artist: row.artist,
       title: row.title,
+      year: row.year,
+      ranking: null,
+      releaseYear: null,
+      inLibrary: null
     }));
 
     return songs;
@@ -46,7 +52,14 @@ export const matchSongToLibrary = async (song: SongParams): SongParams[] => {
     return [];
   } finally {
     if (connection) {
-      connection.end();
+      connection.release();
     }
   }
 };
+
+/*
+export const replaceSongsNotInLibrary = async (songs: SongParams[]): Promise<SongParams[]> => {
+  let connection: PoolConnection | null = null;
+  try {
+    connection = await connectToSql();
+    */
