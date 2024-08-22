@@ -349,8 +349,10 @@ const BasicList: React.FC<BasicListProps> = ({
             }
           >
             <ListItemText
-              primary={song.title}
-              secondary={`${song.artist} | ${song.ranking} | ${song.year} | ${song.releaseYear}`}
+              primary={song.title ?? "∅"}
+              secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${
+                song.year ?? "∅"
+              } | ${song.releaseYear ?? "∅"}`}
             />
             {/* <div dangerouslySetInnerHTML={{ __html: embeds[index] || "" }} /> */}
           </ListItem>
