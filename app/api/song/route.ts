@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
              WHERE year BETWEEN ${startYear} AND ${endYear}
              AND NOT EXISTS (SELECT 1 FROM usedsongs WHERE usedsongs.Artist = billboardsongs.Artist AND usedsongs.Title = billboardsongs.Title) 
              AND NOT EXISTS (SELECT 1 FROM donotplay WHERE donotplay.Artist = billboardsongs.Artist AND donotplay.Title = billboardsongs.Title) 
+             AND NOT EXISTS (SELECT 1 FROM requests WHERE requests.Artist = billboardsongs.Artist AND requests.Title = billboardsongs.Title) 
              ORDER BY RAND() LIMIT 1`
     
 
