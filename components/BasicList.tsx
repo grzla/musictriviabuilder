@@ -86,7 +86,7 @@ const BasicList: React.FC<BasicListProps> = ({
 
             if (response.ok) {
               const matches = await response.json();
-              song.inLibrary = matches.length === 1;
+              song.inLibrary = matches.length > 0;
             } else {
               console.error(
                 "Error fetching library matches:",

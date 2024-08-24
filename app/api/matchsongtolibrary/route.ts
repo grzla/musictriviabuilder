@@ -3,6 +3,19 @@ import { SongParams } from '@/types';
 import { connectToSql } from '@/lib/db/mysql';
 import { PoolConnection } from 'mysql2/promise';
 
+function tokenize(text: string): string {
+  return text
+      .toLowerCase()
+      .replace(/[\.\,\']/g, '') // Remove dots and commas
+      .replace(/\b(ft|feat|featuring)\b/g, 'f') // Normalize featuring variations
+      .replace(/\b(and|&|the)\b/g, '') // Remove "and", "&", and "the"
+      .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
+      .trim()
+      // .split(' ') // Split into words
+      // .sort() // Sort words alphabetically
+      // .join(' '); // Join back into a single string
+}
+
 export const POST = async (req: NextRequest) => {
   let connection: PoolConnection | null = null;
 
@@ -16,10 +29,16 @@ export const POST = async (req: NextRequest) => {
     connection = await connectToSql();
 
     // Tokenize artist and title
+    const tokenizedArtist = artist ? tokenize(artist) : '';
+    const tokenizedTitle = title ? tokenize(title) : '';
+    const searchTokens = [...tokenizedArtist.split(' '), ...tokenizedTitle.split(' ')];
+
+
+    /*
     const artistTokens = artist ? artist.split(/\s+/) : [];
     const titleTokens = title ? title.split(/\s+/) : [];
     const searchTokens = [...artistTokens, ...titleTokens];
-
+    */
     // Build the WHERE clause dynamically based on search tokens
     const whereClauses: string[] = searchTokens.map(token => {
       const escapedToken = connection!.escape(`%${token}%`);
