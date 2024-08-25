@@ -61,7 +61,7 @@ export const POST = async (req: NextRequest) => {
       year: row.year,
       ranking: null,
       releaseYear: null,
-      inLibrary: null
+      inLibrary: (results as any[]).length > 0 ? true : null
     }));
 
     return NextResponse.json(songs, { status: 200 });
