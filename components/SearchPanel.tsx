@@ -43,7 +43,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
   }, [query]);
 
   return (
-    <div>
+    <div className="text-left">
       <SearchBar2 query={query} setQuery={setQuery} />
       <SearchResults
         searchResults={searchResults}

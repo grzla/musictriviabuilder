@@ -6,9 +6,11 @@ import { PoolConnection } from 'mysql2/promise';
 function tokenize(text: string): string {
   return text
       .toLowerCase()
-      .replace(/[\.\,\']/g, '') // Remove dots and commas
-      .replace(/\b(ft|feat|featuring)\b/g, 'f') // Normalize featuring variations
-      .replace(/\b(and|&|the)\b/g, '') // Remove "and", "&", and "the"
+      .replace(/[\.\,\(\)\!]/g, '') // Remove dots and commas
+      // .replace(/\b(ft|feat|featuring)\b/g, 'f') // Normalize featuring variations
+      // .replace(/\b(and|&|the)\b/g, '') // Remove "and", "&", and "the"
+      .replace(/\b(ft|feat|featuring)\b.*$/i, '') // Remove "ft", "feat", or "featuring" and anything that follows
+      .replace(/\b(and|&|the)\b.*$/i, '') // Remove "and", "&", and "the"
       .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
       .trim()
       // .split(' ') // Split into words

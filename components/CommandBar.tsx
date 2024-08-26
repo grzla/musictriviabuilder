@@ -119,11 +119,11 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
   };
 
   const commands = [
-    { name: "Reload", handler: handleReload },
+    // { name: "Reload", handler: handleReload },
     { name: "Shuffle", handler: handleShuffle },
     { name: "Fetch Year", handler: handleFetchYear },
-    { name: "Finalize", handler: handleOpenModal },
     { name: "Export", handler: handleExport },
+    { name: "Finalize", handler: handleOpenModal },
   ];
 
   return (

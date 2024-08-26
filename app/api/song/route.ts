@@ -22,12 +22,13 @@ export async function GET(req: NextRequest) {
         }
 
         // Calculate the start and end years of the decade
-        const startYear: string = (Math.floor(year / 10) * 10).toString();
+        let startYear: string = (Math.floor(year / 10) * 10).toString();
         let endYear: string = (Math.floor(year / 10) * 10 + 9).toString();
         
         if (parseInt(endYear) < 1980) {
             endYear = '1979';
         } else if (parseInt(startYear) >= 2010) {
+            startYear = '2010';
             endYear = '2029';
         }
 

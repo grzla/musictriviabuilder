@@ -12,17 +12,8 @@ export async function GET() {
     let connection: PoolConnection | null = null;
     try {
       connection = await connectToSql();
-      /* original query
-      const queries = [
-        "SELECT * FROM billboardsongs WHERE year < 1980 ORDER BY RAND() LIMIT 2",
-        "SELECT * FROM billboardsongs WHERE year >= 1980 AND year < 1990 ORDER BY RAND() LIMIT 2",
-        "SELECT * FROM billboardsongs WHERE year >= 1990 AND year < 2000 ORDER BY RAND() LIMIT 2",
-        "SELECT * FROM billboardsongs WHERE year >= 2000 AND year < 2010 ORDER BY RAND() LIMIT 2",
-        "SELECT * FROM billboardsongs WHERE year >= 2010 ORDER BY RAND() LIMIT 2"
-      ];
-      */
-  // /*
-  // select 10 songs from billboard which are not in usedsongs or donotplay
+      
+      // select 10 songs from billboard which are not in usedsongs or donotplay
       const queries = [
         `SELECT * FROM billboardsongs 
          WHERE year < 1980 
@@ -68,7 +59,8 @@ export async function GET() {
           artist: row.artist,
           year: row.year,
           releaseYear: null,
-          ranking: row.ranking
+          ranking: row.ranking,
+          inLibrary: null,
         }))
       );
   

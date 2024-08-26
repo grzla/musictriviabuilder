@@ -44,7 +44,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <Box>
         <Grid container spacing={0} sx={{ mt: "2px" }}>
-          <Item sx={{ flexGrow: "6" }}>
+          <Item sx={{ flexGrow: "6", width: "600px" }}>
             <CommandBar songlist={songlist} setSonglist={setSonglist} />
             {isLoading ? (
               <CircularProgress />
@@ -57,7 +57,7 @@ export default function Home() {
               />
             )}
           </Item>
-          <Item sx={{ flexGrow: "3", width: "500px" }}>
+          <Item sx={{ flexGrow: "3", width: "600px" }}>
             {/* <SearchBar /> */}
             {/* <SearchResults /> */}
             {songlist && songlist.length > 0 ? (
