@@ -2,6 +2,29 @@ import { SongParams } from "@/types";
 import { connectToSql } from "@/lib/db/mysql";
 import { PoolConnection } from 'mysql2/promise'; // 
 
+export const checkSongInLibrary = async (song: SongParams) => {
+  try {
+    const response = await fetch("/api/matchsongtolibrary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(song),
+    });
+
+    if (response.ok) {
+      const matches = await response.json();
+      return matches.length > 0;
+    } else {
+      console.error("Error fetching library matches:", response.statusText);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error fetching library matches:", error);
+    return false;
+  }
+};
+
 
 export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]> => {
   

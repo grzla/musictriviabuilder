@@ -1,13 +1,10 @@
 "use client";
 import * as React from "react";
-import Image from "next/image";
 import { styled } from "@mui/material/styles";
 import BasicList from "../components/BasicList";
 import CommandBar from "../components/CommandBar";
-import SearchBar from "../components/SearchBar";
-import SearchResults from "@/components/SearchResults";
 import SearchPanel from "@/components/SearchPanel";
-import { Box, CircularProgress, Grid, Paper, Typography } from "@mui/material";
+import { Box, Grid, Paper, Typography, CircularProgress } from "@mui/material";
 import { SongParams } from "@/types";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -20,8 +17,8 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function Home() {
   const [songlist, setSonglist] = React.useState<SongParams[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
   const [searchResults, setSearchResults] = React.useState<SongParams[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchSongs = async () => {
@@ -39,13 +36,13 @@ export default function Home() {
 
     fetchSongs();
   }, []);
-
+  
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <Box>
         <Grid container spacing={0} sx={{ mt: "2px" }}>
           <Item sx={{ flexGrow: "6", width: "600px" }}>
-            <CommandBar songlist={songlist} setSonglist={setSonglist} />
+          <CommandBar songlist={songlist} setSonglist={setSonglist} />
             {isLoading ? (
               <CircularProgress />
             ) : (
@@ -58,8 +55,6 @@ export default function Home() {
             )}
           </Item>
           <Item sx={{ flexGrow: "3", width: "600px" }}>
-            {/* <SearchBar /> */}
-            {/* <SearchResults /> */}
             {songlist && songlist.length > 0 ? (
               <SearchPanel
                 songlist={songlist}
@@ -69,7 +64,7 @@ export default function Home() {
               />
             ) : (
               <Typography variant="body2">Loading songlist...</Typography>
-            )}{" "}
+            )}
           </Item>
         </Grid>
       </Box>

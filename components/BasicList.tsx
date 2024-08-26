@@ -3,6 +3,7 @@ import { SongParams } from "@/types";
 import { styled } from "@mui/material/styles";
 import {
   Box,
+  CircularProgress,
   List,
   ListItem,
   ListItemButton,
@@ -25,7 +26,7 @@ import {
   Send,
   Email,
 } from "@mui/icons-material";
-import { matchSongToLibrary } from "@/lib/actions/song.actions";
+// import { checkSongInLibrary } from "@/lib/actions/song.actions";
 
 interface BasicListProps {
   songlist: SongParams[];
@@ -43,7 +44,8 @@ const BasicList: React.FC<BasicListProps> = ({
   setSearchResults,
 }) => {
   const [selectedItem, setSelectedItem] = React.useState<number | null>(null);
-  const [hasCheckedMatches, setHasCheckedMatches] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  // const [hasCheckedMatches, setHasCheckedMatches] = React.useState(false);
   // const [embeds, setEmbeds] = React.useState<string[]>([]);
 
   // Fetch embeds when songlist changes
@@ -71,43 +73,49 @@ const BasicList: React.FC<BasicListProps> = ({
   */
 
   React.useEffect(() => {
-    if (hasCheckedMatches) return;
-    const checkMatches = async () => {
-      const updatedSongs = await Promise.all(
-        songlist.map(async (song) => {
-          try {
-            const response = await fetch("/api/matchsongtolibrary", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(song),
-            });
-
-            if (response.ok) {
-              const matches = await response.json();
-              song.inLibrary = matches.length > 0;
-            } else {
-              console.error(
-                "Error fetching library matches:",
-                response.statusText
-              );
-              song.inLibrary = false;
-            }
-          } catch (error) {
-            console.error("Error fetching library matches:", error);
-            // song.inLibrary = false;
-          }
-          return song;
-        })
-      );
-      setHasCheckedMatches(true);
-      setSonglist(updatedSongs);
+    const confirmSongsInLibrary = async () => {
+      try {
+        const songs: SongParams[] = songlist;
+        
+        const songsWithLibraryStatus = await Promise.all(
+          songs.map(async (song: SongParams) => ({
+            ...song,
+            inLibrary: await checkSongInLibrary(song),
+          }))
+        );
+        
+        setSonglist(songsWithLibraryStatus);
+      } catch (error) {
+        console.error("Error fetching songs:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    checkMatches();
-  }, [songlist]);
-
+    confirmSongsInLibrary();
+  }, []);
+  const checkSongInLibrary = async (song: SongParams) => {
+    try {
+      const response = await fetch("/api/matchsongtolibrary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(song),
+      });
+  
+      if (response.ok) {
+        const matches = await response.json();
+        return matches.length > 0;
+      } else {
+        console.error("Error fetching library matches:", response.statusText);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error fetching library matches:", error);
+      return false;
+    }
+  };
   const moveItemUp = (index: number) => {
     if (index === 0) return; // Can't move the first item up
     setSonglist((prevSongs) => {
@@ -136,10 +144,7 @@ const BasicList: React.FC<BasicListProps> = ({
 
   const replaceSong = async (song: SongParams) => {
     try {
-      // Extract the year and id from the song parameter
       const { year, id } = song;
-
-      // Call the api/song endpoint with the song's year using fetch
       const response = await fetch(`/api/song?year=${year}`);
       if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -147,17 +152,18 @@ const BasicList: React.FC<BasicListProps> = ({
       const responseData = await response.json();
       const newSong = responseData["0"];
 
-      // Ensure the newSong object has the necessary properties
       if (!newSong || !newSong.id) {
         throw new Error("Invalid song object returned from the API");
       }
 
-      // Update the songlist state with the new song
+      const inLibrary = await checkSongInLibrary(newSong);
+      newSong.inLibrary = inLibrary;
+
       setSonglist((prevSongs) => {
         const songIndex = prevSongs.findIndex((s) => s.id === id);
         if (songIndex === -1) {
           console.log(`Song with ID ${id} not found in the list.`);
-          return prevSongs; // If the song is not found, return the previous state
+          return prevSongs;
         }
         const updatedSongs = [...prevSongs];
         updatedSongs[songIndex] = newSong;
@@ -263,7 +269,9 @@ const BasicList: React.FC<BasicListProps> = ({
         console.error("Failed to copy text: ", err);
       });
   };
-
+  if (isLoading) {
+    return <CircularProgress />;
+  }
   return (
     <Box>
       <List>
