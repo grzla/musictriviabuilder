@@ -19,11 +19,12 @@ interface Song {
 export async function POST(request: NextRequest) {
   const { songs }: { songs: SongParams[] } = await request.json();
 
-  const songList = songs.map(song => `${song.artist} - ${song.title} (${song.year})`).join('\n');
 
+//   const songList = songs.map(song => `${song.artist} - ${song.title} (${song.year})`).join('\n');
+  const songList = songs.map(song => `${song.artist} - ${song.title})`).join('\n');
+  
   const prompt = `
-  Here is a list of songs for a music trivia game. Check to make sure the year accurately reflects the original release year and update the release year.
-  To the extent possible, reorder the songs so that there is a harmonic flow, with an energy peak approximately 3/4 of the way through the list.
+  Here is a list of songs for a music trivia game. Retrieve the original release year of each song. To the extent possible, reorder the songs so that there is a harmonic flow, with an energy peak approximately 3/4 of the way through the list.
   Return the result as a JSON array of objects, each with the fields: "artist", "title", and "releaseYear".
 
   Songs:
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: 'You are an expert in music curation.' },
         { role: 'user', content: prompt }

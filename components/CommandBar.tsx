@@ -135,8 +135,15 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
       }
 
       const result = await response.json();
-      setSonglist(result.reorderedSongs);
-      console.log("Songs reordered by AI:", result.reorderedSongs);
+      
+      // Update the songlist with the new order and releaseYear
+      const updatedSonglist = result.reorderedSongs.map((reorderedSong: { artist: string; title: string; releaseYear: number }) => {
+        const originalSong = songlist.find(song => song.artist === reorderedSong.artist && song.title === reorderedSong.title);
+        return originalSong ? { ...originalSong, releaseYear: reorderedSong.releaseYear } : originalSong;
+      });
+
+      setSonglist(updatedSonglist);
+      console.log("Songs reordered by AI:", updatedSonglist);
     } catch (error) {
       console.error("Error reordering songs:", error);
     } finally {
