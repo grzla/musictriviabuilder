@@ -1,54 +1,28 @@
 import * as React from "react";
 import { SongParams } from "@/types";
-import { styled } from "@mui/material/styles";
-import {
-  Box,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemAvatar,
-  ListItemText,
-  IconButton,
-  Typography,
-  Tooltip,
-} from "@mui/material";
-import {
-  AddTask,
-  Autorenew,
-  Check,
-  ContentPaste,
-  Delete,
-  DoNotDisturb,
-  Edit,
-  ArrowUpward,
-  ArrowDownward,
-  Send,
-  Email,
-} from "@mui/icons-material";
-// import { checkSongInLibrary } from "@/lib/actions/song.actions";
+import { Box, CircularProgress, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
+import { AddTask, Autorenew, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward } from "@mui/icons-material";
 
 interface BasicListProps {
   songlist: SongParams[];
   setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
   searchResults: SongParams[];
   setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  embeds: string[];
+  setEmbeds: React.Dispatch<React.SetStateAction<string[]>>;
 }
-
-// const hasCheckedMatches = React.useRef(false);
 
 const BasicList: React.FC<BasicListProps> = ({
   songlist,
   setSonglist,
   searchResults,
   setSearchResults,
+  embeds,
+  setEmbeds
 }) => {
   const [selectedItem, setSelectedItem] = React.useState<number | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  // const [hasCheckedMatches, setHasCheckedMatches] = React.useState(false);
-  // const [embeds, setEmbeds] = React.useState<string[]>([]);
 
-  // Fetch embeds when songlist changes
   /*
   React.useEffect(() => {
     const fetchEmbeds = async () => {
@@ -69,21 +43,35 @@ const BasicList: React.FC<BasicListProps> = ({
     };
 
     fetchEmbeds();
-  }, [songlist]);
+  }, []);
   */
 
+  const fetchEmbeds = async () => {
+      try {
+        const response = await fetch("/api/fetchpreviews", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(songlist),
+        });
+
+        const data = await response.json();
+        setEmbeds(data.embeds);
+      } catch (error) {
+        console.error("Failed to fetch Spotify embeds:", error);
+      }
+    };
   React.useEffect(() => {
     const confirmSongsInLibrary = async () => {
       try {
-        const songs: SongParams[] = songlist;
-        
         const songsWithLibraryStatus = await Promise.all(
-          songs.map(async (song: SongParams) => ({
+          songlist.map(async (song) => ({
             ...song,
             inLibrary: await checkSongInLibrary(song),
           }))
         );
-        
+
         setSonglist(songsWithLibraryStatus);
       } catch (error) {
         console.error("Error fetching songs:", error);
@@ -94,7 +82,7 @@ const BasicList: React.FC<BasicListProps> = ({
 
     confirmSongsInLibrary();
   }, []);
-  
+
   const checkSongInLibrary = async (song: SongParams) => {
     try {
       const response = await fetch("/api/matchsongtolibrary", {
@@ -104,7 +92,7 @@ const BasicList: React.FC<BasicListProps> = ({
         },
         body: JSON.stringify(song),
       });
-  
+
       if (response.ok) {
         const matches = await response.json();
         return matches.length > 0;
@@ -117,6 +105,7 @@ const BasicList: React.FC<BasicListProps> = ({
       return false;
     }
   };
+
   const moveItemUp = (index: number) => {
     if (index === 0) return; // Can't move the first item up
     setSonglist((prevSongs) => {
@@ -125,7 +114,6 @@ const BasicList: React.FC<BasicListProps> = ({
         newSongs[index],
         newSongs[index - 1],
       ];
-      console.log("Songs after moving up:", newSongs);
       return newSongs;
     });
   };
@@ -138,7 +126,6 @@ const BasicList: React.FC<BasicListProps> = ({
         newSongs[index],
         newSongs[index + 1],
       ];
-      console.log("Songs after moving down:", newSongs);
       return newSongs;
     });
   };
@@ -151,7 +138,7 @@ const BasicList: React.FC<BasicListProps> = ({
         throw new Error("Network response was not ok");
       }
       const responseData = await response.json();
-      const newSong = responseData["0"];
+      const newSong = responseData[0];
 
       if (!newSong || !newSong.id) {
         throw new Error("Invalid song object returned from the API");
@@ -168,7 +155,27 @@ const BasicList: React.FC<BasicListProps> = ({
         }
         const updatedSongs = [...prevSongs];
         updatedSongs[songIndex] = newSong;
-        console.log("Updated songs list:", updatedSongs);
+
+        // Fetch new embed for the replaced song
+        fetch("/api/fetchpreviews", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([newSong]),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            setEmbeds((prevEmbeds) => {
+              const newEmbeds = [...prevEmbeds];
+              newEmbeds[songIndex] = data.embeds[0];
+              return newEmbeds;
+            });
+          })
+          .catch((error) => {
+            console.error("Failed to fetch new Spotify embed:", error);
+          });
+
         return updatedSongs;
       });
     } catch (error) {
@@ -178,8 +185,6 @@ const BasicList: React.FC<BasicListProps> = ({
 
   const donotplay = async (song: SongParams) => {
     try {
-      // const { artist, title, id } = song;
-
       const response = await fetch("/api/donotplay", {
         method: "POST",
         headers: {
@@ -190,36 +195,47 @@ const BasicList: React.FC<BasicListProps> = ({
     } catch (error) {
       console.error("Failed to add song to do-not-play list:", error);
     }
-    // Logic to get the new song
-
-    // Add the song to the donotplay list
-
-    // Call replaceSong to handle the replacement logic
     await replaceSong(song);
   };
 
   const handleItemClick = async (index: number, song: SongParams) => {
     setSelectedItem(index);
     try {
-      const response = await fetch("/api/matchsongtolibrary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(song),
-      });
+      const [libraryResponse, embedResponse] = await Promise.all([
+        fetch("/api/matchsongtolibrary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(song),
+        }),
+        fetch("/api/fetchpreviews", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify([song]),
+        }),
+      ]);
 
-      if (response.ok) {
-        const libMatches = await response.json();
+      if (libraryResponse.ok) {
+        const libMatches = await libraryResponse.json();
         setSearchResults(libMatches);
       } else {
-        console.error("Error fetching library matches:", response.statusText);
+        console.error("Error fetching library matches:", libraryResponse.statusText);
+      }
+
+      if (embedResponse.ok) {
+        const embedData = await embedResponse.json();
+        setEmbeds((prevEmbeds) => {
+          const newEmbeds = [...prevEmbeds];
+          newEmbeds[0] = embedData.embeds[0];
+          return newEmbeds;
+        });
+      } else {
+        console.error("Error fetching embed:", embedResponse.statusText);
       }
     } catch (error) {
-      console.error("Error fetching library matches:", error);
+      console.error("Error fetching data:", error);
     }
   };
-
+  
   const confirmInLibrary = (index: number) => {
     setSonglist((prevSongs) => {
       const newSongs = [...prevSongs];
@@ -270,16 +286,18 @@ const BasicList: React.FC<BasicListProps> = ({
         console.error("Failed to copy text: ", err);
       });
   };
+
   if (isLoading) {
     return <CircularProgress />;
   }
+
   return (
     <Box>
       <List>
         {songlist.map((song, index) => (
           <ListItem
             key={`${song.id}-${index}`}
-            dense={true}
+            dense
             onClick={() => handleItemClick(index, song)}
             style={{
               backgroundColor: song.inLibrary ? "lightgreen" : "lightcoral",
@@ -312,7 +330,7 @@ const BasicList: React.FC<BasicListProps> = ({
                 <Tooltip title="Replace">
                   <IconButton
                     edge="end"
-                    aria-label="delete"
+                    aria-label="replace"
                     onClick={() => replaceSong(song)}
                   >
                     <Autorenew />
@@ -348,7 +366,7 @@ const BasicList: React.FC<BasicListProps> = ({
                 <Tooltip title="Remove from list">
                   <IconButton
                     edge="end"
-                    aria-label="ban"
+                    aria-label="delete"
                     onClick={() => deleteSong(index)}
                   >
                     <Delete />
@@ -357,13 +375,18 @@ const BasicList: React.FC<BasicListProps> = ({
               </>
             }
           >
-            <ListItemText
-              primary={song.title ?? "∅"}
-              secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${
-                song.year ?? "∅"
-              } | ${song.releaseYear ?? "∅"}`}
-            />
-            {/* <div dangerouslySetInnerHTML={{ __html: embeds[index] || "" }} /> */}
+            {/* <div
+              dangerouslySetInnerHTML={{ __html: embeds[index] || "" }}
+              style={{ marginRight: "16px", minWidth: "300px" }}
+            /> */}
+            <div style={{ flex: 1 }}>
+              <ListItemText
+                primary={song.title ?? "∅"}
+                secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${
+                  song.year ?? "∅"
+                } | ${song.releaseYear ?? "∅"}`}
+              />
+            </div>
           </ListItem>
         ))}
       </List>

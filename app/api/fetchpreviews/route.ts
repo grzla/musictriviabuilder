@@ -1,5 +1,5 @@
 import { SongParams } from '@/types';
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
 const SPOTIFY_ACCESS_TOKEN = process.env.SPOTIFY_ACCESS_TOKEN;
 
@@ -36,7 +36,7 @@ async function generateEmbed(artist: string, title: string): Promise<string> {
     try {
         const trackId = await searchTrack(artist, title);
         if (trackId) {
-            return `<iframe src="https://open.spotify.com/embed/track/${trackId}" width="80" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
+            return `<iframe src="https://open.spotify.com/embed/track/${trackId}" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
         } else {
             return 'Track not found';
         }
@@ -46,25 +46,24 @@ async function generateEmbed(artist: string, title: string): Promise<string> {
     }
 }
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
+export async function POST(req: NextRequest) {
     try {
-        if (req.method === 'POST') {
-            console.log('Request body:', req.body);
-            const songs: SongParams[] = req.body;
+        const songs: SongParams[] = await req.json();
+        console.log('Received POST request in fetchpreviews');
+        console.log('Request body:', songs);
 
-            if (!Array.isArray(songs) || songs.length === 0) {
-                return res.status(400).json({ error: 'Invalid input' });
-            }
-
-            const embeds = await Promise.all(songs.map(song => generateEmbed(song.artist, song.title)));
-
-            return res.status(200).json({ embeds });
-        } else {
-            res.setHeader('Allow', ['POST']);
-            res.status(405).end(`Method ${req.method} Not Allowed`);
+        if (!Array.isArray(songs) || songs.length === 0) {
+            console.log('Invalid input: songs is not an array or is empty');
+            return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
         }
+
+        console.log('Generating embeds for songs:', songs);
+        const embeds = await Promise.all(songs.map(song => generateEmbed(song.artist, song.title)));
+        console.log('Generated embeds:', embeds);
+
+        return NextResponse.json({ embeds });
     } catch (error) {
         console.error('Error handling POST request:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

@@ -19,6 +19,7 @@ export default function Home() {
   const [songlist, setSonglist] = React.useState<SongParams[]>([]);
   const [searchResults, setSearchResults] = React.useState<SongParams[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [embeds, setEmbeds] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     const fetchSongs = async () => {
@@ -41,8 +42,8 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <Box>
         <Grid container spacing={0} sx={{ mt: "2px" }}>
-          <Item sx={{ flexGrow: "6", width: "600px" }}>
-          <CommandBar songlist={songlist} setSonglist={setSonglist} />
+          <Item sx={{ flexGrow: "6", width: "900px" }}>
+          <CommandBar songlist={songlist} setSonglist={setSonglist} embeds={embeds} setEmbeds={setEmbeds} />
             {isLoading ? (
               <CircularProgress />
             ) : (
@@ -51,6 +52,8 @@ export default function Home() {
                 setSonglist={setSonglist}
                 searchResults={searchResults}
                 setSearchResults={setSearchResults}
+                embeds={embeds}
+                setEmbeds={setEmbeds}
               />
             )}
           </Item>

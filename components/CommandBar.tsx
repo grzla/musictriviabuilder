@@ -8,14 +8,17 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
+import Box from "@mui/material/Box";
 import { SongParams } from "@/types/index.js";
 
 interface CommandBarProps {
   songlist: SongParams[];
   setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  embeds: string[];
+  setEmbeds: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-function CommandBar({ songlist, setSonglist }: CommandBarProps) {
+function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProps) {
   const [open, setOpen] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
 
@@ -126,19 +129,26 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
   return (
     <div>
       <AppBar sx={{ position: "relative" }}>
-        <Toolbar>
-          {commands.map(({ name, handler }) => (
-            <Button 
-              key={name} 
-              color="inherit" 
-              onClick={handler}
-              disabled={name === "AI reorder" && isReordering}
-            >
-              {name === "AI reorder" && isReordering ? "Reordering..." : name}
-            </Button>
-          ))}
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', gap: 2, flexGrow: 1 }}>
+            {commands.map(({ name, handler }) => (
+              <Button 
+                key={name} 
+                color="inherit" 
+                onClick={handler}
+                disabled={name === "AI reorder" && isReordering}
+              >
+                {name === "AI reorder" && isReordering ? "Reordering..." : name}
+              </Button>
+            ))}
+          </Box>
+          <Box sx={{ width: '300px', height: '80px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
+            {embeds && (
+              <div dangerouslySetInnerHTML={{ __html: embeds[0] }} />
+            )}
+          </Box>
         </Toolbar>
-      </AppBar>
+      </AppBar> 
       <Dialog
         open={open}
         onClose={handleCloseModal}
