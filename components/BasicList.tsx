@@ -94,6 +94,7 @@ const BasicList: React.FC<BasicListProps> = ({
 
     confirmSongsInLibrary();
   }, []);
+  
   const checkSongInLibrary = async (song: SongParams) => {
     try {
       const response = await fetch("/api/matchsongtolibrary", {

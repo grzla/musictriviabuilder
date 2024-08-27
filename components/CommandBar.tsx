@@ -17,6 +17,7 @@ interface CommandBarProps {
 
 function CommandBar({ songlist, setSonglist }: CommandBarProps) {
   const [open, setOpen] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
 
   const handleReload = () => {
     console.log("Reload action");
@@ -118,10 +119,36 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
     });
   };
 
+  const handleAISort = async () => {
+    setIsReordering(true);
+    try {
+      const response = await fetch("/api/aireorder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ songs: songlist }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to reorder songs");
+      }
+
+      const result = await response.json();
+      setSonglist(result.reorderedSongs);
+      console.log("Songs reordered by AI:", result.reorderedSongs);
+    } catch (error) {
+      console.error("Error reordering songs:", error);
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   const commands = [
     // { name: "Reload", handler: handleReload },
     { name: "Shuffle", handler: handleShuffle },
     { name: "Fetch Year", handler: handleFetchYear },
+    { name: "AI reorder", handler: handleAISort }, 
     { name: "Export", handler: handleExport },
     { name: "Finalize", handler: handleOpenModal },
   ];
@@ -131,8 +158,13 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
       <AppBar sx={{ position: "relative" }}>
         <Toolbar>
           {commands.map(({ name, handler }) => (
-            <Button key={name} color="inherit" onClick={handler}>
-              {name}
+            <Button 
+              key={name} 
+              color="inherit" 
+              onClick={handler}
+              disabled={name === "AI reorder" && isReordering}
+            >
+              {name === "AI reorder" && isReordering ? "Reordering..." : name}
             </Button>
           ))}
         </Toolbar>
