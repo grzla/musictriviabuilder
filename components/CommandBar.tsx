@@ -55,46 +55,10 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
     }
   };
 
-  const handleFetchYear = async () => {
-    try {
-      const updatedSonglist = await Promise.all(
-        songlist.map(async (song) => {
-          const response = await fetch("/api/fetchyear", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ song }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch year");
-          }
-
-          const result = await response.json();
-          return { ...song, releaseYear: result.oldestYear };
-        })
-      );
-
-      setSonglist(updatedSonglist);
-      console.log("Songlist updated with release years:", updatedSonglist);
-    } catch (error) {
-      console.error("Error fetching release years:", error);
-    }
-  };
-
   const handleExport = () => {
     const formattedSonglist = songlist
       .map((song) => {
-        let releaseYear = "";
-        if (song.releaseYear && song.year) {
-          releaseYear = `(${Math.min(song.releaseYear, song.year)})`;
-        } else if (song.releaseYear) {
-          releaseYear = `(${song.releaseYear})`;
-        } else if (song.year) {
-          releaseYear = `(${song.year})`;
-        }
-        return `${song.artist} - ${song.title} ${releaseYear}`;
+        return `${song.artist} - ${song.title} (${song.releaseYear})`;
       })
       .join("\n");
 
@@ -154,7 +118,6 @@ function CommandBar({ songlist, setSonglist }: CommandBarProps) {
   const commands = [
     // { name: "Reload", handler: handleReload },
     { name: "Shuffle", handler: handleShuffle },
-    { name: "Fetch Year", handler: handleFetchYear },
     { name: "AI reorder", handler: handleAISort }, 
     { name: "Export", handler: handleExport },
     { name: "Finalize", handler: handleOpenModal },
