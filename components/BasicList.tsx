@@ -377,15 +377,17 @@ const BasicList: React.FC<BasicListProps> = ({
           >
           <Box
             sx={{
-              minWidth: '30px',
-              height: '30px',
+              minWidth: '40px',
+              height: '40px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: 'primary.main',
-              color: 'white',
-              borderRadius: '4px',
+              backgroundColor: 'rgba(255, 255, 255, 0.5)', // 50% transparent white
+              color: '555555',
+              borderRadius: '5px',
               marginRight: '16px',
+              paddingTop: '3px',
+              fontSize: '20px', // Increased font size
             }}
           >
             {index + 1}
