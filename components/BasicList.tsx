@@ -375,10 +375,21 @@ const BasicList: React.FC<BasicListProps> = ({
               </>
             }
           >
-            {/* <div
-              dangerouslySetInnerHTML={{ __html: embeds[index] || "" }}
-              style={{ marginRight: "16px", minWidth: "300px" }}
-            /> */}
+          <Box
+            sx={{
+              minWidth: '30px',
+              height: '30px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'primary.main',
+              color: 'white',
+              borderRadius: '4px',
+              marginRight: '16px',
+            }}
+          >
+            {index + 1}
+          </Box>
             <div style={{ flex: 1 }}>
               <ListItemText
                 primary={song.title ?? "∅"}

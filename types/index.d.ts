@@ -1,4 +1,5 @@
 export type Status = 'played' | 'unplayed' | 'donotplay' | null;
+export type GameCat = 'namethattune' | 'decades';
 
 export type Item = {
   id: number;
@@ -14,6 +15,8 @@ export type SongParams = {
   ranking: number | null;
   releaseYear: number | null;
   inLibrary: boolean | null;
+  gameNum: number | null;
+  gameCat: GameCat | null;
 };
 /*
 export type SongParams = {

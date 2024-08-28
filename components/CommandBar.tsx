@@ -102,7 +102,7 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
       }
 
       const result = await response.json();
-      
+
       // Update the songlist with the new order and releaseYear
       const updatedSonglist = result.reorderedSongs.map((reorderedSong: { artist: string; title: string; releaseYear: number }) => {
         const originalSong = songlist.find(song => song.artist === reorderedSong.artist && song.title === reorderedSong.title);
@@ -121,34 +121,72 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
   const commands = [
     // { name: "Reload", handler: handleReload },
     { name: "Shuffle", handler: handleShuffle },
-    { name: "AI reorder", handler: handleAISort }, 
+    { name: "AI reorder", handler: handleAISort },
     { name: "Export", handler: handleExport },
     { name: "Finalize", handler: handleOpenModal },
   ];
 
   return (
     <div>
-      <AppBar sx={{ position: "relative" }}>
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', gap: 2, flexGrow: 1 }}>
-            {commands.map(({ name, handler }) => (
-              <Button 
-                key={name} 
-                color="inherit" 
-                onClick={handler}
-                disabled={name === "AI reorder" && isReordering}
-              >
-                {name === "AI reorder" && isReordering ? "Reordering..." : name}
-              </Button>
-            ))}
+      <AppBar sx={{
+        position: "relative", borderRadius: '12px', // add rounded corners
+        paddingTop: 0
+      }}>
+        <Box
+          sx={{
+            display: 'flex',
+            overflow: 'hidden', // ensures inner content respects the border radi
+          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1, // this makes the left column take the remaining space
+              height: '80px', // match the height of the embed box
+            }}
+          >
+            <Box
+              sx={{
+                height: '70%', // take up half the height
+                display: 'flex',
+                alignItems: 'flex-end', // Changed from 'left' to 'center' for vertical alignment
+                paddingLeft: 4,
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                GAME
+              </Typography>
+            </Box>
+
+            <Toolbar 
+              variant="dense" 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'flex-start',
+                height: '30%', // take up the other half of the height
+              }}
+            >
+              <Box sx={{ display: 'flex', gap: 3, flexGrow: 1 }}>
+                {commands.map(({ name, handler }) => (
+                  <Button
+                    key={name}
+                    color="inherit"
+                    onClick={handler}
+                    disabled={name === "AI reorder" && isReordering}
+                  >
+                    {name === "AI reorder" && isReordering ? "Reordering..." : name}
+                  </Button>
+                ))}
+              </Box>
+            </Toolbar>
           </Box>
           <Box sx={{ width: '300px', height: '80px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
             {embeds && (
               <div dangerouslySetInnerHTML={{ __html: embeds[0] }} />
             )}
           </Box>
-        </Toolbar>
-      </AppBar> 
+        </Box>
+      </AppBar>
       <Dialog
         open={open}
         onClose={handleCloseModal}
