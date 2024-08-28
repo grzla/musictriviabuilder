@@ -7,28 +7,19 @@ import { SongParams } from '@/types';
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 })
-/*
-interface Song {
-  artist: string;
-  title: string;
-  year: number;
-  releaseYear: number;
-}
-  */
+
 
 export async function POST(request: NextRequest) {
   const { songs }: { songs: SongParams[] } = await request.json();
 
-
-//   const songList = songs.map(song => `${song.artist} - ${song.title} (${song.year})`).join('\n');
-  const songList = songs.map(song => `${song.artist} - ${song.title})`).join('\n');
+  const songlist = songs.map(song => `${song.artist} - ${song.title})`).join('\n');
   
   const prompt = `
   Here is a list of songs for a music trivia game. Retrieve the original release year of each song. Shuffle the songs so that the years are not in order. Then, to the extent possible, reorder the songs so that there is a harmonic flow, with an energy peak approximately 3/4 of the way through the list.
   Return the result as a JSON array of objects, each with the fields: "artist", "title", and "releaseYear".
 
   Songs:
-  ${songList}
+  ${songlist}
 `;
 
   try {

@@ -18,9 +18,7 @@ export async function POST(req: NextRequest) {
 
         const query = 'INSERT INTO donotplay (artist, title) VALUES (?, ?)';
         const [results] = await connection.query(query, [artist, title]);
-
         const songs = results;
-        // console.log(`Fetched songs: ${JSON.stringify(songs)}`);
 
         return NextResponse.json(songs, { status: 200 });
     } catch (error) {
