@@ -1,7 +1,46 @@
 import { SongParams } from '@/types';
 import { NextRequest, NextResponse } from 'next/server';
 
-const SPOTIFY_ACCESS_TOKEN = process.env.SPOTIFY_ACCESS_TOKEN;
+async function getSpotifyAccessToken(): Promise<string | null> {
+  try {
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: process.env.SPOTIFY_CLIENT_ID || '',
+        client_secret: process.env.SPOTIFY_CLIENT_SECRET || '',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`Spotify access token: ${data.access_token}`);
+    return data.access_token;
+  } catch (error) {
+    console.error('Error fetching Spotify access token:', error);
+    return null;
+  }
+}
+
+let SPOTIFY_ACCESS_TOKEN: string | null = null;
+let tokenExpirationTime: number = 0;
+
+async function getValidSpotifyAccessToken(): Promise<string | null> {
+  const currentTime = Date.now();
+  if (!SPOTIFY_ACCESS_TOKEN || currentTime >= tokenExpirationTime) {
+    SPOTIFY_ACCESS_TOKEN = await getSpotifyAccessToken();
+    if (SPOTIFY_ACCESS_TOKEN) {
+      tokenExpirationTime = currentTime + 3600000; // Set expiration to 1 hour from now
+    }
+  }
+  return SPOTIFY_ACCESS_TOKEN;
+}
 
 async function searchTrack(artist: string, title: string): Promise<string | null> {
     try {
@@ -10,7 +49,7 @@ async function searchTrack(artist: string, title: string): Promise<string | null
 
         const response = await fetch(url, {
             headers: {
-                'Authorization': `Bearer ${process.env.SPOTIFY_ACCESS_TOKEN}`
+                'Authorization': `Bearer ${await getValidSpotifyAccessToken()}`
             }
         });
 
@@ -49,17 +88,12 @@ async function generateEmbed(artist: string, title: string): Promise<string> {
 export async function POST(req: NextRequest) {
     try {
         const songs: SongParams[] = await req.json();
-        console.log('Received POST request in fetchpreviews');
-        console.log('Request body:', songs);
 
         if (!Array.isArray(songs) || songs.length === 0) {
-            console.log('Invalid input: songs is not an array or is empty');
             return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
         }
 
-        console.log('Generating embeds for songs:', songs);
         const embeds = await Promise.all(songs.map(song => generateEmbed(song.artist, song.title)));
-        console.log('Generated embeds:', embeds);
 
         return NextResponse.json({ embeds });
     } catch (error) {
