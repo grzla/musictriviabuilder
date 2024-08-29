@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const songlist = songs.map(song => `${song.artist} - ${song.title})`).join('\n');
   
   const prompt = `
-  Here is a list of songs for a music trivia game. Retrieve the original release year of each song. Shuffle the songs so that the years are not in order. Then, to the extent possible, reorder the songs so that there is a harmonic flow, with an energy peak approximately 3/4 of the way through the list.
+  Here is a list of songs. Retrieve the original release year of each song.  Shuffle the list. Reorder harmonically with an energy peak 3/4 through the list.
   Return the result as a JSON array of objects, each with the fields: "artist", "title", and "releaseYear".
 
   Songs:

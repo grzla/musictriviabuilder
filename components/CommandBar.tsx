@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -9,6 +9,8 @@ import DialogTitle from "@mui/material/DialogTitle";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Box from "@mui/material/Box";
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 import { SongParams } from "@/types/index.js";
 
 interface CommandBarProps {
@@ -17,6 +19,11 @@ interface CommandBarProps {
   embeds: string[];
   setEmbeds: React.Dispatch<React.SetStateAction<string[]>>;
 }
+
+// Memoized Embed Component
+const SpotifyPlayer = memo(({ embed }: { embed: string }) => {
+  return <div dangerouslySetInnerHTML={{ __html: embed }} />;
+});
 
 function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProps) {
   const [open, setOpen] = useState(false);
@@ -145,9 +152,9 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
               height: '80px', // match the height of the embed box
             }}
           >
-            <Box
+            {/* <Box
               sx={{
-                height: '70%', // take up half the height
+                height: '50%', // take up half the height
                 display: 'flex',
                 alignItems: 'flex-end', // Changed from 'left' to 'center' for vertical alignment
                 paddingLeft: 4,
@@ -156,14 +163,14 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
               <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                 GAME
               </Typography>
-            </Box>
+            </Box> */}
 
-            <Toolbar 
-              variant="dense" 
-              sx={{ 
-                display: 'flex', 
+            <Toolbar
+              variant="dense"
+              sx={{
+                display: 'flex',
                 justifyContent: 'flex-start',
-                height: '30%', // take up the other half of the height
+                height: '50%', // take up the other half of the height
               }}
             >
               <Box sx={{ display: 'flex', gap: 3, flexGrow: 1 }}>
@@ -179,12 +186,24 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
                 ))}
               </Box>
             </Toolbar>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                GAME
+              </Typography>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={1} onChange={(event, newValue) => { }} aria-label="basic tabs example">
+                  <Tab label="Item One" />
+                  <Tab label="Item Two" />
+                  <Tab label="Item Three" />
+                </Tabs>
+              </Box>
+            </Box>
           </Box>
-          <Box sx={{ width: '300px', height: '80px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
-            {embeds && (
-              <div dangerouslySetInnerHTML={{ __html: embeds[0] }} />
-            )}
-          </Box>
+      <Box sx={{ width: '300px', height: '80px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
+        {embeds && embeds[0] && (
+          <SpotifyPlayer embed={embeds[0]} />
+        )}
+      </Box>
         </Box>
       </AppBar>
       <Dialog

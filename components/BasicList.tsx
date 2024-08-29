@@ -3,6 +3,7 @@ import { SongParams } from "@/types";
 import { Box, CircularProgress, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
 import { AddTask, Autorenew, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward } from "@mui/icons-material";
 
+
 interface BasicListProps {
   songlist: SongParams[];
   setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
@@ -22,29 +23,6 @@ const BasicList: React.FC<BasicListProps> = ({
 }) => {
   const [selectedItem, setSelectedItem] = React.useState<number | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-
-  /*
-  React.useEffect(() => {
-    const fetchEmbeds = async () => {
-      try {
-        const response = await fetch("/api/fetchpreviews", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(songlist),
-        });
-
-        const data = await response.json();
-        setEmbeds(data.embeds);
-      } catch (error) {
-        console.error("Failed to fetch Spotify embeds:", error);
-      }
-    };
-
-    fetchEmbeds();
-  }, []);
-  */
 
   const fetchEmbeds = async () => {
       try {
@@ -198,44 +176,49 @@ const BasicList: React.FC<BasicListProps> = ({
     await replaceSong(song);
   };
 
-  const handleItemClick = async (index: number, song: SongParams) => {
-    setSelectedItem(index);
-    try {
-      const [libraryResponse, embedResponse] = await Promise.all([
-        fetch("/api/matchsongtolibrary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(song),
-        }),
-        fetch("/api/fetchpreviews", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify([song]),
-        }),
-      ]);
+const handleItemClick = async (index: number, song: SongParams) => {
+  setSelectedItem(index);
+  try {
+    const libraryResponse = await fetch("/api/matchsongtolibrary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(song),
+    });
 
-      if (libraryResponse.ok) {
-        const libMatches = await libraryResponse.json();
-        setSearchResults(libMatches);
-      } else {
-        console.error("Error fetching library matches:", libraryResponse.statusText);
-      }
-
-      if (embedResponse.ok) {
-        const embedData = await embedResponse.json();
-        setEmbeds((prevEmbeds) => {
-          const newEmbeds = [...prevEmbeds];
-          newEmbeds[0] = embedData.embeds[0];
-          return newEmbeds;
-        });
-      } else {
-        console.error("Error fetching embed:", embedResponse.statusText);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    if (libraryResponse.ok) {
+      const libMatches = await libraryResponse.json();
+      setSearchResults(libMatches);
+    } else {
+      console.error("Error fetching library matches:", libraryResponse.statusText);
     }
-  };
-  
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+const handleDoubleClick = async (song: SongParams) => {
+  try {
+    const response = await fetch("/api/fetchpreviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([song]),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setEmbeds((prevEmbeds) => {
+        const newEmbeds = [...prevEmbeds];
+        newEmbeds[0] = data.embeds[0];
+        return newEmbeds;
+      });
+      console.log('Fetched previews:', data);
+    } else {
+      console.error('Error fetching previews:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching previews:', error);
+  }
+};
   const confirmInLibrary = (index: number) => {
     setSonglist((prevSongs) => {
       const newSongs = [...prevSongs];
@@ -299,6 +282,7 @@ const BasicList: React.FC<BasicListProps> = ({
             key={`${song.id}-${index}`}
             dense
             onClick={() => handleItemClick(index, song)}
+            onDoubleClick={() => handleDoubleClick(song)}
             style={{
               backgroundColor: song.inLibrary ? "lightgreen" : "lightcoral",
             }}

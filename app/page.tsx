@@ -5,7 +5,7 @@ import BasicList from "../components/BasicList";
 import CommandBar from "../components/CommandBar";
 import SearchPanel from "@/components/SearchPanel";
 import { Box, Grid, Paper, Typography, CircularProgress } from "@mui/material";
-import { SongParams } from "@/types";
+import { SongParams, GameCat } from "@/types";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
@@ -17,9 +17,17 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function Home() {
   const [songlist, setSonglist] = React.useState<SongParams[]>([]);
+  const [currentRound, setCurrentRound] = React.useState<number>(0);
   const [searchResults, setSearchResults] = React.useState<SongParams[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [embeds, setEmbeds] = React.useState<string[]>([]);
+  const [gameNum, setGameNum] = React.useState<number>(0);
+  const [rounds, setRounds] = React.useState<{
+    [key in GameCat]: SongParams[]
+  }>({
+    namethattune: [],
+    decades: []
+  });
 
   React.useEffect(() => {
     const fetchSongs = async () => {
@@ -37,13 +45,13 @@ export default function Home() {
 
     fetchSongs();
   }, []);
-  
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <Box>
         <Grid container spacing={0} sx={{ mt: "2px" }}>
           <Item sx={{ flexGrow: "6", width: "800px" }}>
-          <CommandBar songlist={songlist} setSonglist={setSonglist} embeds={embeds} setEmbeds={setEmbeds} />
+            <CommandBar songlist={songlist} setSonglist={setSonglist} embeds={embeds} setEmbeds={setEmbeds} />
             {isLoading ? (
               <CircularProgress />
             ) : (
