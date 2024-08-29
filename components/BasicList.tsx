@@ -372,11 +372,12 @@ const handleDoubleClick = async (song: SongParams) => {
               marginRight: '16px',
               paddingTop: '3px',
               fontSize: '20px', // Increased font size
+              userSelect: 'none',
             }}
           >
             {index + 1}
           </Box>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, userSelect: 'none'  }}>
               <ListItemText
                 primary={song.title ?? "∅"}
                 secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${
