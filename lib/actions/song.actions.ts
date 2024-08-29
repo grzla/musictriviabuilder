@@ -4,7 +4,7 @@ import { PoolConnection } from 'mysql2/promise'; //
 
 export const removeFeaturingAnd = (artist: string): string => {
   // remove the rest of any part of the string which includes f. ft. feat. featuring and
-  return artist.replace(/\b(f\.?|ft\.?|feat\.?|featuring|and)\b.*$/gi, '').trim();
+  return artist.replace(/\b(f\.?|ft\.?|feat\.?|featuring|and|&)\b.*$/gi, '').trim();
 }
 export const checkSongInLibrary = async (song: SongParams) => {
   try {
