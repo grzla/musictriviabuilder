@@ -2,6 +2,10 @@ import { SongParams } from "@/types";
 import { connectToSql } from "@/lib/db/mysql";
 import { PoolConnection } from 'mysql2/promise'; // 
 
+// might make sense to have an artist normalization function and a title normalization function
+// some titles have things like: Humpty Dance, The
+// also the back apostrophe is causing matching problems. needs to be replaced with regular apostrophe
+
 export const removeFeaturingAnd = (artist: string): string => {
   // remove the rest of any part of the string which includes f. ft. feat. featuring and
   return artist.replace(/\b(f\.?|ft\.?|feat\.?|featuring|and|&)\b.*$/gi, '').trim();
