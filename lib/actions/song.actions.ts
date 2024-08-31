@@ -74,7 +74,9 @@ export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]
       year: row.year,
       ranking: null,
       releaseYear: null,
-      inLibrary: null
+      inLibrary: null,
+      gameNum: null,
+      gameCat: null
     }));
 
     return songs;
