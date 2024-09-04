@@ -6,6 +6,55 @@ import { PoolConnection } from 'mysql2/promise'; //
 // some titles have things like: Humpty Dance, The
 // also the back apostrophe is causing matching problems. needs to be replaced with regular apostrophe
 
+export const composeQuery = (year: number): string => {
+  let startYear: number | null, endYear: number | null;
+
+  // build the year condition
+  if (year < 1980) {
+    startYear = null; // Assuming 1960 as the earliest year
+    endYear = 1979;
+  } else if (year >= 1980 && year <= 1989) {
+    startYear = 1980;
+    endYear = 1989;
+  } else if (year >= 1990 && year <= 1999) {
+    startYear = 1990;
+    endYear = 1999;
+  } else if (year >= 2000 && year <= 2009) {
+    startYear = 2000;
+    endYear = 2009;
+  } else {
+    startYear = 2010;
+    endYear = null; // Current year
+  }
+
+  // build the year condition
+  const yearCondition = startYear && endYear
+    ? `year BETWEEN ${startYear} AND ${endYear}`
+    : startYear
+    ? `year >= ${startYear}`
+    : endYear
+    ? `year <= ${endYear}`
+    : '1 = 1'; // This will always be true, effectively not applying any year condition
+
+  const tableNames = ['usedsongs', 'donotplay', 'requests'];
+  
+  const notExistsSubqueries = tableNames.map(tableName => `
+      NOT EXISTS (
+          SELECT 1 
+          FROM ${tableName} 
+          WHERE TRIM(SUBSTRING_INDEX(${tableName}.Artist, 'featuring', 1)) LIKE CONCAT('%', TRIM(SUBSTRING_INDEX(billboardsongs.Artist, 'featuring', 1)), '%') 
+          AND TRIM(${tableName}.Title) LIKE CONCAT('%', TRIM(billboardsongs.Title), '%')
+      )
+  `).join(' AND ');
+
+  return `
+      SELECT * FROM billboardsongs 
+      WHERE ${yearCondition} 
+      AND ${notExistsSubqueries}
+      ORDER BY RAND() LIMIT 1
+  `;
+}
+
 export const removeFeaturingAnd = (artist: string): string => {
   // remove the rest of any part of the string which includes f. ft. feat. featuring and
   return artist.replace(/\b(f\.?|ft\.?|feat\.?|featuring|and|&)\b.*$/gi, '').trim();

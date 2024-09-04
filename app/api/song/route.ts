@@ -3,9 +3,9 @@ import { connectToSql } from "@/lib/db/mysql";
 import { NextRequest, NextResponse } from "next/server";
 import { PoolConnection } from 'mysql2/promise';
 import { RowDataPacket } from 'mysql2/promise';
+import { composeQuery } from "@/lib/actions/song.actions";
 
 
-  
 export async function GET(req: NextRequest) {
     let connection: PoolConnection | null = null;
     try {
@@ -17,35 +17,18 @@ export async function GET(req: NextRequest) {
         console.log(`Searching the database: ${searchParams}`);
         const year: number | null = searchParams.has('year') ? Number(searchParams.get('year')) : null;
 
-        if (year === null){
+        if (year === null) {
             return NextResponse.json({ error: 'No search tokens provided' }, { status: 400 });
         }
 
-        // Calculate the start and end years of the decade
-        let startYear: string = (Math.floor(year / 10) * 10).toString();
-        let endYear: string = (Math.floor(year / 10) * 10 + 9).toString();
-        
-        if (parseInt(endYear) < 1980) {
-            endYear = '1979';
-        } else if (parseInt(startYear) >= 2010) {
-            startYear = '2010';
-            endYear = '2029';
-        }
+        const query = composeQuery(year);
 
-        const query =
-            `SELECT * FROM billboardsongs 
-             WHERE year BETWEEN ${startYear} AND ${endYear}
-             AND NOT EXISTS (SELECT 1 FROM usedsongs WHERE usedsongs.Artist = billboardsongs.Artist AND usedsongs.Title = billboardsongs.Title) 
-             AND NOT EXISTS (SELECT 1 FROM donotplay WHERE donotplay.Artist = billboardsongs.Artist AND donotplay.Title = billboardsongs.Title) 
-             AND NOT EXISTS (SELECT 1 FROM requests WHERE requests.Artist = billboardsongs.Artist AND requests.Title = billboardsongs.Title) 
-             ORDER BY RAND() LIMIT 1`
-    
 
         // console.log('Executing query...');
         const [results] = await connection.query(query);
-        
 
-        
+
+
         console.log('Query executed successfully.');
 
         const songs = results;
@@ -56,8 +39,8 @@ export async function GET(req: NextRequest) {
         console.error('Error fetching songs:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     } finally {
-    if (connection) {
-        connection.release();
+        if (connection) {
+            connection.release();
+        }
     }
-}
 }
