@@ -57,7 +57,7 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(songlist),
+        body: JSON.stringify(songlist[currentRound]),
       });
 
       if (!response.ok) {
