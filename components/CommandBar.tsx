@@ -50,34 +50,42 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
   };
 
   const handleConfirmFinalize = async () => {
-    console.log("Finalize action");
+    console.log("Finalizing both rounds");
+    const allSongs = [...songlist.namethattune, ...songlist.decades];
     try {
       const response = await fetch("/api/usedsongs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(songlist[currentRound]),
+        body: JSON.stringify(allSongs),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to finalize songlist");
+        throw new Error("Failed to finalize songlist for both rounds");
       }
 
       const result = await response.json();
-      console.log("Songlist finalized:", result);
-      handleCloseModal();
+      console.log("Both rounds finalized:", result);
+      setOpen(false)
     } catch (error) {
-      console.error("Error finalizing songlist:", error);
+      console.error("Error finalizing both rounds:", error);
     }
   };
 
   const handleExport = () => {
-    const formattedSonglist = songlist[currentRound]
-      .map((song) => {
-        return `${song.artist} - ${song.title} (${song.releaseYear})`;
-      })
-      .join("\n");
+    const formattedSonglist = [
+      "NAME THAT TUNE",
+      ...songlist.namethattune.map(formatSong),
+      "",  // Add an empty string for a new line
+      "DECADES",
+      ...songlist.decades.map(formatSong)
+    ].join("\n");
+
+    function formatSong(song: SongParams) {
+      const yearInfo = song.releaseYear ? `${song.releaseYear}` : song.year ? `${song.year}` : '';
+      return `${song.artist} - ${song.title} (${yearInfo})`;
+    }
 
     navigator.clipboard
       .writeText(formattedSonglist)
@@ -243,7 +251,7 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
         <DialogTitle id="confirm-finalize-dialog">Confirm Finalize</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to finalize the songlist?
+            Are you sure you want to finalize both songlists?
           </DialogContentText>
         </DialogContent>
         <DialogActions>

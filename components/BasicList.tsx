@@ -51,17 +51,21 @@ const BasicList: React.FC<BasicListProps> = ({
   React.useEffect(() => {
     const confirmSongsInLibrary = async () => {
       try {
-        const songsWithLibraryStatus = await Promise.all(
-          songlist[currentRound].map(async (song) => ({
-            ...song,
-            inLibrary: await checkSongInLibrary(song),
-          }))
-        );
+        const rounds: GameCat[] = ['namethattune', 'decades'];
+        const updatedSonglist = { ...songlist };
 
-        setSonglist(prevSonglist => ({
-          ...prevSonglist,
-          [currentRound]: songsWithLibraryStatus
-        }));
+        for (const round of rounds) {
+          const songsWithLibraryStatus = await Promise.all(
+            songlist[round].map(async (song) => ({
+              ...song,
+              inLibrary: await checkSongInLibrary(song),
+            }))
+          );
+
+          updatedSonglist[round] = songsWithLibraryStatus;
+        }
+
+        setSonglist(updatedSonglist);
       } catch (error) {
         console.error("Error fetching songs:", error);
       } finally {

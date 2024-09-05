@@ -31,16 +31,17 @@ export default function Home() {
   React.useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const res = await fetch("/api/round", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch songs");
-        const songs = await res.json();
-        setSonglist((prevSonglist) => {
-          // Create a new object with all properties from prevSonglist
-          const updatedSonglist = { ...prevSonglist };
-          // Update the songs for the current round
-          updatedSonglist[currentRound] = songs;
-          return updatedSonglist;
-        });
+        const rounds: GameCat[] = ['namethattune', 'decades'];
+        const updatedSonglist = { ...songlist };
+
+        for (const round of rounds) {
+          const res = await fetch(`/api/round?round=${round}`, { cache: "no-store" });
+          if (!res.ok) throw new Error(`Failed to fetch songs for ${round}`);
+          const songs = await res.json();
+          updatedSonglist[round] = songs;
+        }
+
+        setSonglist(updatedSonglist);
       } catch (error) {
         console.error("Error fetching songs:", error);
       } finally {
