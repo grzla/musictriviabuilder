@@ -79,7 +79,7 @@ export default function Home() {
             )}
           </Item>
           <Item sx={{ flexGrow: "3", width: "600px" }}>
-            {songlist[currentRound] && songlist[currentRound].length > 0 ? (
+            {songlist[currentRound] ? (
               <SearchPanel
                 songlist={songlist}
                 setSonglist={setSonglist}

@@ -138,12 +138,21 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
     }
   };
 
+  const handleSwitch = () => {
+    if (currentRound === 'namethattune') {
+      setCurrentRound('decades');
+    } else {
+      setCurrentRound('namethattune');
+    }
+  };
+
   const commands = [
     // { name: "Reload", handler: handleReload },
+    { name: "Switch", handler: handleSwitch },
     { name: "Shuffle", handler: handleShuffle },
     { name: "AI reorder", handler: handleAISort },
     { name: "Export", handler: handleExport },
-    { name: "Finalize", handler: handleOpenModal },
+    { name: "Finalize", handler: handleOpenModal }
   ];
 
   return (
