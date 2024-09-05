@@ -23,6 +23,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   currentRound,
 }) => {
   const addSong = (song: SongParams) => {
+    song.inLibrary = true;
     setSonglist(prevSonglist => ({
       ...prevSonglist,
       [currentRound]: [...prevSonglist[currentRound], song]
