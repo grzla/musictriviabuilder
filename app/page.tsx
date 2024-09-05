@@ -6,6 +6,7 @@ import CommandBar from "../components/CommandBar";
 import SearchPanel from "@/components/SearchPanel";
 import { Box, Grid, Paper, Typography, CircularProgress } from "@mui/material";
 import { SongParams, GameCat } from "@/types";
+import useGameState from "@/lib/useGameState";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
@@ -16,18 +17,16 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export default function Home() {
-  const [songlist, setSonglist] = React.useState<SongParams[]>([]);
-  const [currentRound, setCurrentRound] = React.useState<number>(0);
+  const { 
+    songlist, setSonglist, 
+    currentRound, setCurrentRound, 
+    gameNum, setGameNum, 
+    queueToSonglist
+  } = useGameState();
+
   const [searchResults, setSearchResults] = React.useState<SongParams[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [embeds, setEmbeds] = React.useState<string[]>([]);
-  const [gameNum, setGameNum] = React.useState<number>(0);
-  const [rounds, setRounds] = React.useState<{
-    [key in GameCat]: SongParams[]
-  }>({
-    namethattune: [],
-    decades: []
-  });
 
   React.useEffect(() => {
     const fetchSongs = async () => {
@@ -35,7 +34,13 @@ export default function Home() {
         const res = await fetch("/api/round", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch songs");
         const songs = await res.json();
-        setSonglist(songs);
+        setSonglist((prevSonglist) => {
+          // Create a new object with all properties from prevSonglist
+          const updatedSonglist = { ...prevSonglist };
+          // Update the songs for the current round
+          updatedSonglist[currentRound] = songs;
+          return updatedSonglist;
+        });
       } catch (error) {
         console.error("Error fetching songs:", error);
       } finally {
@@ -51,13 +56,21 @@ export default function Home() {
       <Box>
         <Grid container spacing={0} sx={{ mt: "2px" }}>
           <Item sx={{ flexGrow: "6", width: "800px" }}>
-            <CommandBar songlist={songlist} setSonglist={setSonglist} embeds={embeds} setEmbeds={setEmbeds} />
+            <CommandBar 
+              songlist={songlist} 
+              setSonglist={setSonglist} 
+              currentRound={currentRound} 
+              setCurrentRound={setCurrentRound} 
+              embeds={embeds} 
+              setEmbeds={setEmbeds} 
+            />
             {isLoading ? (
               <CircularProgress />
             ) : (
               <BasicList
                 songlist={songlist}
                 setSonglist={setSonglist}
+                currentRound={currentRound}
                 searchResults={searchResults}
                 setSearchResults={setSearchResults}
                 embeds={embeds}
@@ -66,12 +79,14 @@ export default function Home() {
             )}
           </Item>
           <Item sx={{ flexGrow: "3", width: "600px" }}>
-            {songlist && songlist.length > 0 ? (
+            {songlist[currentRound] && songlist[currentRound].length > 0 ? (
               <SearchPanel
                 songlist={songlist}
                 setSonglist={setSonglist}
                 searchResults={searchResults}
                 setSearchResults={setSearchResults}
+                currentRound={currentRound}
+                queueToSonglist={queueToSonglist}
               />
             ) : (
               <Typography variant="body2">Loading songlist...</Typography>

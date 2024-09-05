@@ -1,22 +1,32 @@
 import React from "react";
 import { Box, Typography, Button } from "@mui/material";
-import { SongParams } from "@/types";
+import { SongParams, GameCat } from "@/types";
 
 interface SearchResultsProps {
   searchResults: SongParams[];
   setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
-  songlist: SongParams[];
-  setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  songlist: {
+    [key in GameCat]: SongParams[]
+  };
+  setSonglist: React.Dispatch<React.SetStateAction<{
+    [key in GameCat]: SongParams[]
+  }>>;
+  currentRound: GameCat;
+  queueToSonglist: (song: SongParams, cat?: GameCat) => void;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
-  searchResults: searchResults,
+  searchResults,
   setSearchResults,
   songlist,
   setSonglist,
+  currentRound,
 }) => {
   const addSong = (song: SongParams) => {
-    setSonglist([...songlist, song]);
+    setSonglist(prevSonglist => ({
+      ...prevSonglist,
+      [currentRound]: [...prevSonglist[currentRound], song]
+    }));
   };
 
   return (

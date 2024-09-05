@@ -2,13 +2,20 @@ import * as React from "react";
 import { SongParams } from "@/types";
 import { Box, CircularProgress, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
 import { AddTask, Autorenew, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward } from "@mui/icons-material";
+import { GameCat } from "@/types/index.js";
+
 
 
 interface BasicListProps {
-  songlist: SongParams[];
-  setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  songlist: {
+    [key in GameCat]: SongParams[]
+  };
+  setSonglist: React.Dispatch<React.SetStateAction<{
+    [key in GameCat]: SongParams[]
+  }>>;
   searchResults: SongParams[];
   setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  currentRound: GameCat;
   embeds: string[];
   setEmbeds: React.Dispatch<React.SetStateAction<string[]>>;
 }
@@ -18,6 +25,7 @@ const BasicList: React.FC<BasicListProps> = ({
   setSonglist,
   searchResults,
   setSearchResults,
+  currentRound,
   embeds,
   setEmbeds
 }) => {
@@ -25,32 +33,35 @@ const BasicList: React.FC<BasicListProps> = ({
   const [isLoading, setIsLoading] = React.useState(true);
 
   const fetchEmbeds = async () => {
-      try {
-        const response = await fetch("/api/fetchpreviews", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(songlist),
-        });
+    try {
+      const response = await fetch("/api/fetchpreviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(songlist),
+      });
 
-        const data = await response.json();
-        setEmbeds(data.embeds);
-      } catch (error) {
-        console.error("Failed to fetch Spotify embeds:", error);
-      }
-    };
+      const data = await response.json();
+      setEmbeds(data.embeds);
+    } catch (error) {
+      console.error("Failed to fetch Spotify embeds:", error);
+    }
+  };
   React.useEffect(() => {
     const confirmSongsInLibrary = async () => {
       try {
         const songsWithLibraryStatus = await Promise.all(
-          songlist.map(async (song) => ({
+          songlist[currentRound].map(async (song) => ({
             ...song,
             inLibrary: await checkSongInLibrary(song),
           }))
         );
 
-        setSonglist(songsWithLibraryStatus);
+        setSonglist(prevSonglist => ({
+          ...prevSonglist,
+          [currentRound]: songsWithLibraryStatus
+        }));
       } catch (error) {
         console.error("Error fetching songs:", error);
       } finally {
@@ -86,25 +97,31 @@ const BasicList: React.FC<BasicListProps> = ({
 
   const moveItemUp = (index: number) => {
     if (index === 0) return; // Can't move the first item up
-    setSonglist((prevSongs) => {
-      const newSongs = [...prevSongs];
+    setSonglist((prevSonglist) => {
+      const newSongs = [...prevSonglist[currentRound]];
       [newSongs[index - 1], newSongs[index]] = [
         newSongs[index],
         newSongs[index - 1],
       ];
-      return newSongs;
+      return {
+        ...prevSonglist,
+        [currentRound]: newSongs
+      };
     });
   };
 
   const moveItemDown = (index: number) => {
-    setSonglist((prevSongs) => {
-      if (index === prevSongs.length - 1) return prevSongs; // Can't move the last item down
-      const newSongs = [...prevSongs];
+    setSonglist((prevSonglist) => {
+      if (index === prevSonglist[currentRound].length - 1) return prevSonglist; // Can't move the last item down
+      const newSongs = [...prevSonglist[currentRound]];
       [newSongs[index + 1], newSongs[index]] = [
         newSongs[index],
         newSongs[index + 1],
       ];
-      return newSongs;
+      return {
+        ...prevSonglist,
+        [currentRound]: newSongs
+      };
     });
   };
 
@@ -125,13 +142,13 @@ const BasicList: React.FC<BasicListProps> = ({
       const inLibrary = await checkSongInLibrary(newSong);
       newSong.inLibrary = inLibrary;
 
-      setSonglist((prevSongs) => {
-        const songIndex = prevSongs.findIndex((s) => s.id === id);
+      setSonglist((prevSonglist) => {
+        const songIndex = prevSonglist[currentRound].findIndex((s) => s.id === id);
         if (songIndex === -1) {
           console.log(`Song with ID ${id} not found in the list.`);
-          return prevSongs;
+          return prevSonglist;
         }
-        const updatedSongs = [...prevSongs];
+        const updatedSongs = [...prevSonglist[currentRound]];
         updatedSongs[songIndex] = newSong;
 
         // Fetch new embed for the replaced song
@@ -154,7 +171,10 @@ const BasicList: React.FC<BasicListProps> = ({
             console.error("Failed to fetch new Spotify embed:", error);
           });
 
-        return updatedSongs;
+        return {
+          ...prevSonglist,
+          [currentRound]: updatedSongs
+        };
       });
     } catch (error) {
       console.error("Failed to replace song:", error);
@@ -176,59 +196,67 @@ const BasicList: React.FC<BasicListProps> = ({
     await replaceSong(song);
   };
 
-const handleItemClick = async (index: number, song: SongParams) => {
-  setSelectedItem(index);
-  try {
-    const libraryResponse = await fetch("/api/matchsongtolibrary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(song),
-    });
-
-    if (libraryResponse.ok) {
-      const libMatches = await libraryResponse.json();
-      setSearchResults(libMatches);
-    } else {
-      console.error("Error fetching library matches:", libraryResponse.statusText);
-    }
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  }
-};
-
-const handleDoubleClick = async (song: SongParams) => {
-  try {
-    const response = await fetch("/api/fetchpreviews", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify([song]),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setEmbeds((prevEmbeds) => {
-        const newEmbeds = [...prevEmbeds];
-        newEmbeds[0] = data.embeds[0];
-        return newEmbeds;
+  const handleItemClick = async (index: number, song: SongParams) => {
+    setSelectedItem(index);
+    try {
+      const libraryResponse = await fetch("/api/matchsongtolibrary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(song),
       });
-      console.log('Fetched previews:', data);
-    } else {
-      console.error('Error fetching previews:', response.statusText);
+
+      if (libraryResponse.ok) {
+        const libMatches = await libraryResponse.json();
+        setSearchResults(libMatches);
+      } else {
+        console.error("Error fetching library matches:", libraryResponse.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
-  } catch (error) {
-    console.error('Error fetching previews:', error);
-  }
-};
+  };
+
+  const handleDoubleClick = async (song: SongParams) => {
+    try {
+      const response = await fetch("/api/fetchpreviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([song]),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmbeds((prevEmbeds) => {
+          const newEmbeds = [...prevEmbeds];
+          newEmbeds[0] = data.embeds[0];
+          return newEmbeds;
+        });
+        console.log('Fetched previews:', data);
+      } else {
+        console.error('Error fetching previews:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching previews:', error);
+    }
+  };
+  
   const confirmInLibrary = (index: number) => {
     setSonglist((prevSongs) => {
-      const newSongs = [...prevSongs];
-      newSongs[index].inLibrary = true;
-      return newSongs;
+      const updatedSongs = { ...prevSongs };
+      updatedSongs[currentRound] = updatedSongs[currentRound].map((song, i) => 
+        i === index ? { ...song, inLibrary: true } : song
+      );
+      return updatedSongs;
     });
   };
 
   const deleteSong = (index: number) => {
-    setSonglist((prevList) => prevList.filter((_, i) => i !== index));
+    setSonglist((prevSonglist) => {
+      const updatedSongs = { ...prevSonglist };
+      updatedSongs[currentRound] = updatedSongs[currentRound]
+      .filter((_, i) => i !== index);
+      return updatedSongs;
+    });
   };
 
   const addToRequests = async (song: SongParams) => {
@@ -277,7 +305,7 @@ const handleDoubleClick = async (song: SongParams) => {
   return (
     <Box>
       <List>
-        {songlist.map((song, index) => (
+        {songlist[currentRound].map((song, index) => (
           <ListItem
             key={`${song.id}-${index}`}
             dense
@@ -359,30 +387,29 @@ const handleDoubleClick = async (song: SongParams) => {
               </>
             }
           >
-          <Box
-            sx={{
-              minWidth: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(255, 255, 255, 0.5)', // 50% transparent white
-              color: '555555',
-              borderRadius: '5px',
-              marginRight: '16px',
-              paddingTop: '3px',
-              fontSize: '20px', // Increased font size
-              userSelect: 'none',
-            }}
-          >
-            {index + 1}
-          </Box>
-            <div style={{ flex: 1, userSelect: 'none'  }}>
+            <Box
+              sx={{
+                minWidth: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)', // 50% transparent white
+                color: '555555',
+                borderRadius: '5px',
+                marginRight: '16px',
+                paddingTop: '3px',
+                fontSize: '20px', // Increased font size
+                userSelect: 'none',
+              }}
+            >
+              {index + 1}
+            </Box>
+            <div style={{ flex: 1, userSelect: 'none' }}>
               <ListItemText
                 primary={song.title ?? "∅"}
-                secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${
-                  song.year ?? "∅"
-                } | ${song.releaseYear ?? "∅"}`}
+                secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${song.year ?? "∅"
+                  } | ${song.releaseYear ?? "∅"}`}
               />
             </div>
           </ListItem>

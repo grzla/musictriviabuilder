@@ -12,10 +12,17 @@ import Box from "@mui/material/Box";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { SongParams } from "@/types/index.js";
+import { GameCat } from "@/types/index.js";
 
 interface CommandBarProps {
-  songlist: SongParams[];
-  setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  songlist: {
+    [key in GameCat]: SongParams[]
+  };
+  setSonglist: React.Dispatch<React.SetStateAction<{
+    [key in GameCat]: SongParams[]
+  }>>;
+  currentRound: GameCat;
+  setCurrentRound: React.Dispatch<React.SetStateAction<GameCat>>;
   embeds: string[];
   setEmbeds: React.Dispatch<React.SetStateAction<string[]>>;
 }
@@ -25,7 +32,7 @@ const SpotifyPlayer = memo(({ embed }: { embed: string }) => {
   return <div dangerouslySetInnerHTML={{ __html: embed }} />;
 });
 
-function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProps) {
+function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embeds, setEmbeds }: CommandBarProps) {
   const [open, setOpen] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
 
@@ -66,7 +73,7 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
   };
 
   const handleExport = () => {
-    const formattedSonglist = songlist
+    const formattedSonglist = songlist[currentRound]
       .map((song) => {
         return `${song.artist} - ${song.title} (${song.releaseYear})`;
       })
@@ -84,12 +91,15 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
 
   const handleShuffle = () => {
     setSonglist((prevList) => {
-      const newList = [...prevList];
-      for (let i = newList.length - 1; i > 0; i--) {
+      const currentSongs = [...prevList[currentRound]];
+      for (let i = currentSongs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [newList[i], newList[j]] = [newList[j], newList[i]];
+        [currentSongs[i], currentSongs[j]] = [currentSongs[j], currentSongs[i]];
       }
-      return newList;
+      return {
+        ...prevList,
+        [currentRound]: currentSongs
+      };
     });
   };
 
@@ -112,11 +122,14 @@ function CommandBar({ songlist, setSonglist, embeds, setEmbeds }: CommandBarProp
 
       // Update the songlist with the new order and releaseYear
       const updatedSonglist = result.reorderedSongs.map((reorderedSong: { artist: string; title: string; releaseYear: number }) => {
-        const originalSong = songlist.find(song => song.artist === reorderedSong.artist && song.title === reorderedSong.title);
+        const originalSong = songlist[currentRound].find(song => song.artist === reorderedSong.artist && song.title === reorderedSong.title);
         return originalSong ? { ...originalSong, releaseYear: reorderedSong.releaseYear } : originalSong;
       });
 
-      setSonglist(updatedSonglist);
+      setSonglist(prevList => ({
+        ...prevList,
+        [currentRound]: updatedSonglist
+      }));
       console.log("Songs reordered by AI:", updatedSonglist);
     } catch (error) {
       console.error("Error reordering songs:", error);

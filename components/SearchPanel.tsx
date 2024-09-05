@@ -2,20 +2,28 @@ import React, { useState, useEffect } from "react";
 import SearchBar2 from "./SearchBar2";
 import SearchResults from "./SearchResults";
 import { Box, Grid } from "@mui/material";
-import { SongParams } from "@/types";
+import { SongParams, GameCat } from "@/types";
 
 interface SearchPanelProps {
-  songlist: SongParams[];
-  setSonglist: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  songlist: {
+    [key in GameCat]: SongParams[]
+  };
+  setSonglist: React.Dispatch<React.SetStateAction<{
+    [key in GameCat]: SongParams[]
+  }>>;
+  currentRound: GameCat;
   searchResults: SongParams[];
   setSearchResults: React.Dispatch<React.SetStateAction<SongParams[]>>;
+  queueToSonglist: (song: SongParams, cat?: GameCat) => void;
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({
   songlist,
   setSonglist,
+  currentRound,
   searchResults,
   setSearchResults,
+  queueToSonglist,
 }) => {
   const [query, setQuery] = useState("");
   useEffect(() => {
@@ -50,6 +58,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
         setSearchResults={setSearchResults}
         songlist={songlist}
         setSonglist={setSonglist}
+        currentRound={currentRound}
+        queueToSonglist={queueToSonglist}
       />
     </div>
   );
