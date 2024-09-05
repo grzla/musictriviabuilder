@@ -148,7 +148,7 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
 
   const commands = [
     // { name: "Reload", handler: handleReload },
-    { name: "Switch", handler: handleSwitch },
+    { name: currentRound === 'namethattune' ? 'NameThat' : currentRound === 'decades' ? 'Decades' : currentRound, handler: handleSwitch },
     { name: "Shuffle", handler: handleShuffle },
     { name: "AI reorder", handler: handleAISort },
     { name: "Export", handler: handleExport },
@@ -157,9 +157,31 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
 
   return (
     <div>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100px',
+          height: '80px',
+          borderRadius: '4px',
+          marginRight: '16px'
+        }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+            GAME
+          </Typography>
+        </Box>
+        <Box sx={{ width: '400px', height: '80px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
+          <Box>
+            {embeds && embeds[0] && (
+              <SpotifyPlayer embed={embeds[0]} />
+            )}
+          </Box>
+        </Box>
+      </Box>
       <AppBar sx={{
         position: "relative", borderRadius: '12px', // add rounded corners
-        paddingTop: 0
+        paddingTop: 0,
       }}>
         <Box
           sx={{
@@ -191,11 +213,11 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
               variant="dense"
               sx={{
                 display: 'flex',
-                justifyContent: 'flex-start',
-                height: '50%', // take up the other half of the height
+                justifyContent: 'space-between',
+                // height: '50%',
               }}
             >
-              <Box sx={{ display: 'flex', gap: 3, flexGrow: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
                 {commands.map(({ name, handler }) => (
                   <Button
                     key={name}
@@ -208,24 +230,9 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
                 ))}
               </Box>
             </Toolbar>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                GAME
-              </Typography>
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={1} onChange={(event, newValue) => { }} aria-label="basic tabs example">
-                  <Tab label="Item One" />
-                  <Tab label="Item Two" />
-                  <Tab label="Item Three" />
-                </Tabs>
-              </Box>
-            </Box>
+
           </Box>
-      <Box sx={{ width: '300px', height: '80px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
-        {embeds && embeds[0] && (
-          <SpotifyPlayer embed={embeds[0]} />
-        )}
-      </Box>
+
         </Box>
       </AppBar>
       <Dialog

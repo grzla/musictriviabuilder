@@ -76,7 +76,7 @@ async function generateEmbed(artist: string, title: string): Promise<string> {
     try {
         const trackId = await searchTrack(artist, title);
         if (trackId) {
-            return `<iframe src="https://open.spotify.com/embed/track/${trackId}" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
+            return `<iframe src="https://open.spotify.com/embed/track/${trackId}" width="400" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
         } else {
             return 'Track not found';
         }

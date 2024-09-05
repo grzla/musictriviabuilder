@@ -1,7 +1,7 @@
 import * as React from "react";
 import { SongParams } from "@/types";
 import { Box, CircularProgress, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
-import { AddTask, Autorenew, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward } from "@mui/icons-material";
+import { AddTask, Autorenew, Attachment, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward } from "@mui/icons-material";
 import { GameCat } from "@/types/index.js";
 
 
@@ -239,11 +239,11 @@ const BasicList: React.FC<BasicListProps> = ({
       console.error('Error fetching previews:', error);
     }
   };
-  
+
   const confirmInLibrary = (index: number) => {
     setSonglist((prevSongs) => {
       const updatedSongs = { ...prevSongs };
-      updatedSongs[currentRound] = updatedSongs[currentRound].map((song, i) => 
+      updatedSongs[currentRound] = updatedSongs[currentRound].map((song, i) =>
         i === index ? { ...song, inLibrary: true } : song
       );
       return updatedSongs;
@@ -254,7 +254,7 @@ const BasicList: React.FC<BasicListProps> = ({
     setSonglist((prevSonglist) => {
       const updatedSongs = { ...prevSonglist };
       updatedSongs[currentRound] = updatedSongs[currentRound]
-      .filter((_, i) => i !== index);
+        .filter((_, i) => i !== index);
       return updatedSongs;
     });
   };
@@ -298,6 +298,20 @@ const BasicList: React.FC<BasicListProps> = ({
       });
   };
 
+  const sendSongToList = async (index: number) => {
+    setSonglist((prevSonglist) => {
+      const updatedSongs = { ...prevSonglist };
+      const songToSend = updatedSongs[currentRound][index];
+      // Add the song to the opposite round, but only if it's not already there
+      const oppositeRound = currentRound === 'namethattune' ? 'decades' : 'namethattune';
+      if (!updatedSongs[oppositeRound].some(song => song.id === songToSend.id)) {
+        updatedSongs[oppositeRound].push(songToSend);
+      }
+      return updatedSongs;
+    });
+    // Call replaceSong with the song that was sent to the other list
+    await replaceSong(songlist[currentRound][index]);
+  };
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -382,6 +396,16 @@ const BasicList: React.FC<BasicListProps> = ({
                     onClick={() => deleteSong(index)}
                   >
                     <Delete />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Send to other list">
+                  <IconButton
+                    edge="end"
+                    aria-label="Send"
+                    onClick={() => sendSongToList(index)}
+                  >
+                    <Attachment />
                   </IconButton>
                 </Tooltip>
               </>
