@@ -1,7 +1,7 @@
 import * as React from "react";
 import { SongParams } from "@/types";
 import { Box, CircularProgress, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
-import { AddTask, Autorenew, Attachment, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward } from "@mui/icons-material";
+import { AddTask, Autorenew, Attachment, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward, SearchOff } from "@mui/icons-material";
 import { GameCat } from "@/types/index.js";
 
 
@@ -285,6 +285,27 @@ const BasicList: React.FC<BasicListProps> = ({
     await replaceSong(song);
   };
 
+  const logSearchMismatch = async (song: SongParams) => {
+    try {
+      const response = await fetch("/api/searchmismatch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ song }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log("Search mismatch logged successfully:", data);
+    } catch (error) {
+      console.error("Error logging search mismatch:", error);
+    }
+  };
+
   const copyToClipboard = (song: SongParams) => {
     if (!song) return;
 
@@ -331,6 +352,8 @@ const BasicList: React.FC<BasicListProps> = ({
             onDoubleClick={() => handleDoubleClick(song)}
             style={{
               backgroundColor: song.inLibrary ? "lightgreen" : "lightcoral",
+              margin: '1px 0', // Add margin to the top and bottom
+              borderRadius: '6px', // Add beveled corners
             }}
             secondaryAction={
               <>
@@ -373,6 +396,15 @@ const BasicList: React.FC<BasicListProps> = ({
                     onClick={() => confirmInLibrary(index)}
                   >
                     <Check />
+                  </IconButton>
+                </Tooltip>
+                                <Tooltip title="Log search mismatch">
+                  <IconButton
+                    edge="end"
+                    aria-label="search mismatch"
+                    onClick={() => logSearchMismatch(song)}
+                  >
+                    <SearchOff />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Do not play">

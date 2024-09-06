@@ -4,7 +4,7 @@ import { SongParams, GameCat } from '@/types';
 // Manage game state
 function useGameState() {
 
-    const [gameNum, setGameNum] = React.useState<number>(0);
+    const [gameNum, setGameNum] = React.useState<number>(49);
     const [currentRound, setCurrentRound] = React.useState<GameCat>("namethattune");
     const [songlist, setSonglist] = React.useState<{
         [key in GameCat]: SongParams[]
