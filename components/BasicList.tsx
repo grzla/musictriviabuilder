@@ -250,6 +250,8 @@ const BasicList: React.FC<BasicListProps> = ({
       updatedSongs[currentRound] = updatedSongs[currentRound].map((song, i) =>
         i === index ? { ...song, inLibrary: true } : song
       );
+      // const song = updatedSongs[currentRound][index];
+      // logSearchMismatch(song);
       return updatedSongs;
     });
   };
@@ -391,14 +393,16 @@ const BasicList: React.FC<BasicListProps> = ({
                 </Tooltip>
                 <Tooltip title="Confirm in library">
                   <IconButton
-                    edge="end"
-                    aria-label="confirm"
-                    onClick={() => confirmInLibrary(index)}
+                    onClick={() => {
+                      confirmInLibrary(index);
+                      const song = songlist[currentRound][index];
+                      logSearchMismatch(song);
+                    }}
                   >
                     <Check />
                   </IconButton>
                 </Tooltip>
-                                <Tooltip title="Log search mismatch">
+                <Tooltip title="Log search mismatch">
                   <IconButton
                     edge="end"
                     aria-label="search mismatch"
