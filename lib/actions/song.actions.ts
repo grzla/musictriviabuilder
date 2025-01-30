@@ -1,6 +1,6 @@
 import { SongParams } from "@/types";
 import { connectToSql } from "@/lib/db/mysql";
-import { PoolConnection } from 'mysql2/promise'; // 
+import { PoolConnection, RowDataPacket } from 'mysql2/promise';
 
 // might make sense to have an artist normalization function and a title normalization function
 // some titles have things like: Humpty Dance, The
@@ -105,39 +105,30 @@ export const checkSongInLibrary = async (song: SongParams) => {
 
 
 export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]> => {
-
   let connection: PoolConnection | null = null;
   try {
     connection = await connectToSql();
 
-    const { artist, title } = song;
+    const { id } = song;
 
-    if (!artist && !title) {
+    if (!id) {
       return []
     }
 
-    // Tokenize artist and title
-    const artistTokens = artist ? artist.split(/\s+/) : [];
-    const titleTokens = title ? title.split(/\s+/) : [];
-    const searchTokens = [...artistTokens, ...titleTokens];
-
-    // Build the WHERE clause dynamically based on search tokens
-    const whereClauses: string[] = searchTokens.map(token => {
-      const escapedToken = connection!.escape(`%${token}%`);
-      return `(Artist LIKE ${escapedToken} OR Title LIKE ${escapedToken})`;
-    });
-
+    // Use normalized columns for matching
     const query = `
-      SELECT MIN(id) as id, artist, title, year
-      FROM librarysongs
-      WHERE ${whereClauses.join(' AND ')}
-      GROUP BY artist, title, year
+      SELECT l.id, l.artist, l.title, l.year
+      FROM librarysongs l
+      JOIN billboardsongs b ON 
+        l.normalized_artist = b.normalized_artist AND
+        l.normalized_title = b.normalized_title
+      WHERE b.id = ?
       LIMIT 10;
     `;
 
-    const [results] = await connection.query(query);
+    const [results] = await connection.execute(query, [id]);
 
-    const songs: SongParams[] = (results as any[]).map((row: any) => ({
+    const songs: SongParams[] = (results as RowDataPacket[]).map(row => ({
       id: row.id,
       artist: row.artist,
       title: row.title,
