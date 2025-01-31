@@ -52,16 +52,22 @@ export const composeQuery = (year: number | null, exactYear: boolean = false): s
     }
   }
 
-  const tableNames = ['usedsongs', 'donotplay', 'requests'];
-
-  const notExistsSubqueries = tableNames.map(tableName => `
-      NOT EXISTS (
-          SELECT 1 
-          FROM ${tableName} 
-          WHERE TRIM(SUBSTRING_INDEX(${tableName}.Artist, 'featuring', 1)) LIKE CONCAT('%', TRIM(SUBSTRING_INDEX(billboardsongs.Artist, 'featuring', 1)), '%') 
-          AND TRIM(${tableName}.Title) LIKE CONCAT('%', TRIM(billboardsongs.Title), '%')
-      )
-  `).join(' AND ');
+  const notExistsSubqueries = `
+    NOT EXISTS (
+      SELECT 1 FROM usedsongs u 
+      WHERE u.normalized_artist = billboardsongs.normalized_artist 
+      AND u.normalized_title = billboardsongs.normalized_title
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM donotplay d
+      WHERE d.normalized_artist = billboardsongs.normalized_artist 
+      AND d.normalized_title = billboardsongs.normalized_title
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM requests r
+      WHERE r.normalized_artist = billboardsongs.normalized_artist 
+      AND r.normalized_title = billboardsongs.normalized_title
+    )`;
 
   const whereClause = year !== null
     ? `WHERE ${yearCondition} AND ${notExistsSubqueries}`

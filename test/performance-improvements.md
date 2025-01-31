@@ -24,10 +24,20 @@ Date: January 31, 2025
   - No more redundant queries
 
 ### Song Matching Performance
-- /api/matchsongtolibrary: 200-800ms average
+- /api/matchsongtolibrary: 120-192ms average
   - Consistent performance using indexed columns
   - Direct matches without string manipulation
   - Parallel requests handled efficiently
+
+### Song Replacement Performance
+- /api/song endpoint: ~2.3s
+  - Expected performance due to:
+    * Random song selection (ORDER BY RAND())
+    * Multiple table exclusion checks
+    * Decade-based filtering
+  - Acceptable for single-song operations
+- Preview fetching: 200-225ms
+  - Fast response times for song previews
 
 ### Query Optimizations
 1. String Operations
