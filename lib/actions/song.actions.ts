@@ -1,10 +1,6 @@
 import { SongParams } from "@/types";
 import { connectToSql } from "@/lib/db/mysql";
-import { PoolConnection, RowDataPacket } from 'mysql2/promise';
-
-// might make sense to have an artist normalization function and a title normalization function
-// some titles have things like: Humpty Dance, The
-// also the back apostrophe is causing matching problems. needs to be replaced with regular apostrophe
+import { PoolConnection } from 'mysql2/promise';
 
 /*
   Compose a query to return a random song from the billboardsongs table based on the provided year.
@@ -12,10 +8,9 @@ import { PoolConnection, RowDataPacket } from 'mysql2/promise';
   Default behavior is to return a random song within the decade of the provided year.
   If 'exactYear' is true, it returns a random song within that specific year. 
   If year is not provided, it returns a random song from any year in the billboardsongs table. 
-  
-  The query excludes songs that exist in the 'usedsongs', 'donotplay', and 'requests' tables.
+  If libraryOnly is true, only returns songs that exist in the library.
 */
-export const composeQuery = (year: number | null, exactYear: boolean = false): string => {
+export const composeQuery = (year: number | null, exactYear: boolean = false, libraryOnly: boolean = false): string => {
   let yearCondition = '';
   let startYear: number | null = null;
   let endYear: number | null = null;
@@ -52,31 +47,49 @@ export const composeQuery = (year: number | null, exactYear: boolean = false): s
     }
   }
 
+  // Base query for getting songs that haven't been used/banned/requested
   const notExistsSubqueries = `
     NOT EXISTS (
       SELECT 1 FROM usedsongs u 
-      WHERE u.normalized_artist = billboardsongs.normalized_artist 
-      AND u.normalized_title = billboardsongs.normalized_title
+      WHERE u.normalized_artist = b.normalized_artist 
+      AND u.normalized_title = b.normalized_title
     )
     AND NOT EXISTS (
       SELECT 1 FROM donotplay d
-      WHERE d.normalized_artist = billboardsongs.normalized_artist 
-      AND d.normalized_title = billboardsongs.normalized_title
+      WHERE d.normalized_artist = b.normalized_artist 
+      AND d.normalized_title = b.normalized_title
     )
     AND NOT EXISTS (
       SELECT 1 FROM requests r
-      WHERE r.normalized_artist = billboardsongs.normalized_artist 
-      AND r.normalized_title = billboardsongs.normalized_title
+      WHERE r.normalized_artist = b.normalized_artist 
+      AND r.normalized_title = b.normalized_title
     )`;
 
-  const whereClause = year !== null
-    ? `WHERE ${yearCondition} AND ${notExistsSubqueries}`
-    : `WHERE ${notExistsSubqueries}`;
+  // For replacements, only return songs that exist in the library
+  if (libraryOnly) {
+    return `
+      WITH available_songs AS (
+        SELECT b.*
+        FROM billboardsongs b
+        INNER JOIN librarysongs l ON 
+          l.normalized_artist = b.normalized_artist AND
+          l.normalized_title = b.normalized_title
+        WHERE ${notExistsSubqueries}
+        ${year !== null ? `AND b.${yearCondition}` : ''}
+      )
+      SELECT *
+      FROM available_songs
+      ORDER BY RAND()
+      LIMIT 1
+    `;
+  }
 
+  // For initial load, return any billboard song
   return `
-    SELECT *
-    FROM billboardsongs
-    ${whereClause}
+    SELECT b.*
+    FROM billboardsongs b
+    WHERE ${notExistsSubqueries}
+    ${year !== null ? `AND b.${yearCondition}` : ''}
     ORDER BY RAND()
     LIMIT 1
   `;
@@ -86,6 +99,7 @@ export const removeFeaturingAnd = (artist: string): string => {
   // remove the rest of any part of the string which includes f. ft. feat. featuring and
   return artist.replace(/\b(f\.?|ft\.?|feat\.?|featuring|and|&)\b.*$/gi, '').trim();
 }
+
 export const checkSongInLibrary = async (song: SongParams) => {
   try {
     const response = await fetch("/api/matchsongtolibrary", {
@@ -108,7 +122,6 @@ export const checkSongInLibrary = async (song: SongParams) => {
     return false;
   }
 };
-
 
 export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]> => {
   let connection: PoolConnection | null = null;
@@ -134,7 +147,7 @@ export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]
 
     const [results] = await connection.execute(query, [id]);
 
-    const songs: SongParams[] = (results as RowDataPacket[]).map(row => ({
+    const songs: SongParams[] = (results as any[]).map(row => ({
       id: row.id,
       artist: row.artist,
       title: row.title,
@@ -156,10 +169,3 @@ export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]
     }
   }
 };
-
-/*
-export const replaceSongsNotInLibrary = async (songs: SongParams[]): Promise<SongParams[]> => {
-  let connection: PoolConnection | null = null;
-  try {
-    connection = await connectToSql();
-    */

@@ -13,15 +13,15 @@ export async function GET(req: NextRequest) {
         // console.log('Connected to the database.');
 
         const { searchParams } = new URL(req.url);
-        // const { year } = await NextRequest.json();
         console.log(`Searching the database: ${searchParams}`);
         const year: number | null = searchParams.has('year') ? Number(searchParams.get('year')) : null;
+        const libraryOnly: boolean = searchParams.has('libraryOnly') ? searchParams.get('libraryOnly') === 'true' : false;
 
         if (year === null) {
             return NextResponse.json({ error: 'No search tokens provided' }, { status: 400 });
         }
 
-        const query = composeQuery(year);
+        const query = composeQuery(year, false, libraryOnly);
 
 
         // console.log('Executing query...');

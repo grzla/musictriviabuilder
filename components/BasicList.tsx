@@ -132,19 +132,19 @@ const BasicList: React.FC<BasicListProps> = ({
   const replaceSong = async (song: SongParams) => {
     try {
       const { year, id } = song;
-      const response = await fetch(`/api/song?year=${year}`);
+      const response = await fetch(`/api/song?year=${year}&libraryOnly=true`);
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       const responseData = await response.json();
-      const newSong = responseData[0];
+      const newSong = {
+        ...responseData[0],
+        inLibrary: true // Song is guaranteed to be in library by our optimized query
+      };
 
       if (!newSong || !newSong.id) {
         throw new Error("Invalid song object returned from the API");
       }
-
-      const inLibrary = await checkSongInLibrary(newSong);
-      newSong.inLibrary = inLibrary;
 
       setSonglist((prevSonglist) => {
         const songIndex = prevSonglist[currentRound].findIndex((s) => s.id === id);

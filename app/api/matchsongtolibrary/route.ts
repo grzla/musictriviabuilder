@@ -19,38 +19,51 @@ export const POST = async (req: NextRequest) => {
   let connection: PoolConnection | null = null;
 
   try {
-    const { artist, title }: SongParams = await req.json();
+    const song: SongParams = await req.json();
     
-    if (!artist && !title) {
+    if (!song) {
       return NextResponse.json([], { status: 200 });
     }
 
     connection = await connectToSql();
 
-    // Tokenize artist and title
-    const tokenizedArtist = artist ? tokenize(artist) : '';
-    const tokenizedTitle = title ? tokenize(title) : '';
-    const searchTokens = [...tokenizedArtist.split(' '), ...tokenizedTitle.split(' ')];
-
-
-    // Build the WHERE clause dynamically based on search tokens
-    if (!connection) {
-      throw new Error('Failed to establish database connection');
+    // Get normalized values from billboardsongs
+    let normalizedRow;
+    if (song.id) {
+      const [results] = await connection.execute(`
+        SELECT normalized_artist, normalized_title
+        FROM billboardsongs
+        WHERE id = ?
+      `, [song.id]);
+      normalizedRow = (results as any[])[0];
+    } else if (song.artist && song.title) {
+      const [results] = await connection.execute(`
+        SELECT normalized_artist, normalized_title
+        FROM billboardsongs
+        WHERE artist = ? AND title = ?
+      `, [song.artist, song.title]);
+      normalizedRow = (results as any[])[0];
+    } else {
+      return NextResponse.json([], { status: 200 });
     }
 
-    const whereClauses: string[] = searchTokens.map(token => {
-      const escapedToken = connection!.escape(`%${token}%`);
-      return `(Artist LIKE ${escapedToken} OR Title LIKE ${escapedToken})`;
-    });
+    if (!normalizedRow) {
+      return NextResponse.json([], { status: 200 });
+    }
 
+    // Use the normalized values to find matches in library
     const query = `
       SELECT MIN(id) as id, artist, title, year
       FROM librarysongs
-      WHERE ${whereClauses.join(' AND ')}
+      WHERE normalized_artist = ? 
+      AND normalized_title = ?
       GROUP BY artist, title, year
       LIMIT 10;
     `;
-    const [results] = await connection.query(query);
+    const [results] = await connection.execute(query, [
+      normalizedRow.normalized_artist,
+      normalizedRow.normalized_title
+    ]);
 
     interface LibrarySongRow {
       id: number;
