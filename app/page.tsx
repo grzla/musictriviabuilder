@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { styled } from "@mui/material/styles";
-import BasicList from "../components/BasicList";
+import Playlist from "../components/Playlist";
 import CommandBar from "../components/CommandBar";
 import SearchPanel from "@/components/SearchPanel";
 import { Box, Grid, Paper, Typography, CircularProgress } from "@mui/material";
@@ -68,7 +68,7 @@ export default function Home() {
             {isLoading ? (
               <CircularProgress />
             ) : (
-              <BasicList
+              <Playlist
                 songlist={songlist}
                 setSonglist={setSonglist}
                 currentRound={currentRound}

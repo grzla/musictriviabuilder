@@ -84929,7 +84929,7 @@
           {
             "id": 136,
             "children": [],
-            "displayName": "SearchBar2",
+            "displayName": "SearchBar",
             "hocDisplayNames": null,
             "key": null,
             "type": 5,
@@ -86154,7 +86154,7 @@
           "warning": null
         },
         {
-          "componentName": "SearchBar2",
+          "componentName": "SearchBar",
           "duration": 0,
           "timestamp": 77,
           "type": "render",
@@ -87526,7 +87526,7 @@
           "warning": null
         },
         {
-          "componentName": "SearchBar2",
+          "componentName": "SearchBar",
           "duration": 0,
           "timestamp": 317,
           "type": "render",
@@ -101057,7 +101057,7 @@
           "warning": null
         },
         {
-          "componentName": "SearchBar2",
+          "componentName": "SearchBar",
           "duration": 0,
           "timestamp": 3812,
           "type": "render",
@@ -182208,7 +182208,7 @@
           "warning": null
         },
         {
-          "componentName": "SearchBar2",
+          "componentName": "SearchBar",
           "duration": 0,
           "timestamp": 4463,
           "type": "render",

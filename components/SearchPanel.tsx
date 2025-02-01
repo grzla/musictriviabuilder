@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import SearchBar2 from "./SearchBar2";
+import SearchBar from "./SearchBar";
 import SearchResults from "./SearchResults";
 import { Box, Grid } from "@mui/material";
 import { SongParams, GameCat } from "@/types";
@@ -52,7 +52,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 
   return (
     <div className="text-left">
-      <SearchBar2 query={query} setQuery={setQuery} />
+      <SearchBar query={query} setQuery={setQuery} />
       <SearchResults
         searchResults={searchResults}
         setSearchResults={setSearchResults}

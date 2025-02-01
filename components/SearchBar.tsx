@@ -5,7 +5,7 @@ interface SearchBarProps {
   setQuery: (query: string) => void;
 }
 
-const SearchBar2: React.FC<SearchBarProps> = ({ query, setQuery }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ query, setQuery }) => {
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
   };
@@ -22,4 +22,4 @@ const SearchBar2: React.FC<SearchBarProps> = ({ query, setQuery }) => {
   );
 };
 
-export default SearchBar2;
+export default SearchBar;

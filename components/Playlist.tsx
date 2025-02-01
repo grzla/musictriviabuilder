@@ -27,7 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface BasicListProps {
+interface PlaylistProps {
   songlist: {
     [key in GameCat]: SongParams[]
   };
@@ -41,12 +41,11 @@ interface BasicListProps {
   setEmbeds: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-interface SortableItemProps extends Omit<BasicListProps, 'songlist' | 'setSonglist'> {
+interface SortableItemProps extends Omit<PlaylistProps, 'songlist' | 'setSonglist'> {
   song: SongParams;
   index: number;
   handleItemClick: (index: number, song: SongParams) => void;
   handleDoubleClick: (song: SongParams) => void;
-  confirmInLibrary: (index: number) => void;
   logSearchMismatch: (song: SongParams) => Promise<void>;
   copyToClipboard: (song: SongParams) => void;
   replaceSong: (song: SongParams) => Promise<void>;
@@ -111,17 +110,6 @@ function SortableItem({ song, index, ...props }: SortableItemProps) {
               }}
             >
               <Autorenew />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Confirm in library">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                props.confirmInLibrary(index);
-                props.logSearchMismatch(song);
-              }}
-            >
-              <Check />
             </IconButton>
           </Tooltip>
           <Tooltip title="Log search mismatch">
@@ -221,7 +209,7 @@ function SortableItem({ song, index, ...props }: SortableItemProps) {
   );
 }
 
-const BasicList: React.FC<BasicListProps> = ({
+const Playlist: React.FC<PlaylistProps> = ({
   songlist,
   setSonglist,
   searchResults,
@@ -458,16 +446,6 @@ const BasicList: React.FC<BasicListProps> = ({
     }
   };
 
-  const confirmInLibrary = (index: number) => {
-    setSonglist((prevSongs) => {
-      const updatedSongs = { ...prevSongs };
-      updatedSongs[currentRound] = updatedSongs[currentRound].map((song, i) =>
-        i === index ? { ...song, inLibrary: true } : song
-      );
-      return updatedSongs;
-    });
-  };
-
   const deleteSong = (index: number) => {
     setSonglist((prevSonglist) => {
       const updatedSongs = { ...prevSonglist };
@@ -580,7 +558,6 @@ const BasicList: React.FC<BasicListProps> = ({
                 setEmbeds={setEmbeds}
                 handleItemClick={handleItemClick}
                 handleDoubleClick={handleDoubleClick}
-                confirmInLibrary={confirmInLibrary}
                 logSearchMismatch={logSearchMismatch}
                 copyToClipboard={copyToClipboard}
                 replaceSong={replaceSong}
@@ -597,4 +574,4 @@ const BasicList: React.FC<BasicListProps> = ({
   );
 };
 
-export default BasicList;
+export default Playlist;
