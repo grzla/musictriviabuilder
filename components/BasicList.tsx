@@ -1,6 +1,12 @@
 import * as React from "react";
 import { SongParams } from "@/types";
-import { Box, CircularProgress, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
+import { Box, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
+import dynamic from 'next/dynamic';
+
+const CircularProgress = dynamic(
+  () => import('@mui/material/CircularProgress'),
+  { ssr: false }
+);
 import { AddTask, Autorenew, Attachment, Check, ContentPaste, Delete, DoNotDisturb, SearchOff } from "@mui/icons-material";
 import { GameCat } from "@/types/index.js";
 import {
