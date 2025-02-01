@@ -67,19 +67,46 @@ Date: January 31, 2025
    - Add request deduplication
    - Implement proper error handling
 
-## Raw Performance Data
+## Raw Performance Data (February 1, 2025)
 
+### Initial Load (After Build)
 ```
-Initial Page Load:
-GET / 200 in 887ms
-GET /favicon.ico 200 in 30ms
+Build Performance:
+- Initial compilation: 6.7s (1464 modules)
+- Subsequent compilation: 1.4s (726 modules)
+
+Page Load:
+- GET / 200 in 7867ms
+- GET /favicon.ico 200 in 3095ms
 
 API Performance:
-GET /api/round?round=namethattune 200 in 439ms
-GET /api/round?round=decades 200 in 203ms
+- GET /api/round?round=namethattune 200 in 2895ms
+- GET /api/round?round=decades 200 in 201ms
+- POST /api/matchsongtolibrary initial batch: 614-681ms
+- POST /api/matchsongtolibrary subsequent: 58-89ms
 
-Song Matching:
-POST /api/matchsongtolibrary 200 in 200-800ms (average)
+Connection Pool:
+- Maximum active connections: 6
+- Proper connection reuse observed
+- Connections properly released after use
+```
+
+### Subsequent Load (After Caching)
+```
+Page Load:
+- GET / 200 in 287ms (96% faster than initial)
+- GET /favicon.ico 200 in 28ms (99% faster than initial)
+
+API Performance:
+- GET /api/round?round=namethattune 200 in 124ms (96% faster)
+- GET /api/round?round=decades 200 in 119ms (41% faster)
+- POST /api/matchsongtolibrary range: 38-114ms
+- Average /api/matchsongtolibrary: ~65ms
+
+Connection Pool:
+- Consistent connection reuse
+- Active connections never exceeded limit (10)
+- Quick connection release and reuse
 ```
 
 ## Next Steps
