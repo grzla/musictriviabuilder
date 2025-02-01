@@ -3,7 +3,7 @@ import { connectToSql } from "@/lib/db/mysql";
 import { NextRequest, NextResponse } from "next/server";
 import { PoolConnection } from 'mysql2/promise';
 import { RowDataPacket } from 'mysql2/promise';
-import { composeQuery } from "@/lib/actions/song.actions";
+import { composeQuery } from "@/lib/db/queries";
 
 
 export async function GET(req: NextRequest) {
@@ -22,17 +22,23 @@ export async function GET(req: NextRequest) {
         }
 
         const query = composeQuery(year, false, libraryOnly);
+        const [results] = await connection.query<RowDataPacket[]>(query);
+        
+        if (!results || !Array.isArray(results) || results.length === 0) {
+            return NextResponse.json({ error: 'No songs found' }, { status: 404 });
+        }
 
-
-        // console.log('Executing query...');
-        const [results] = await connection.query(query);
-
-
-
-        console.log('Query executed successfully.');
-
-        const songs = results;
-        // console.log(`Fetched songs: ${JSON.stringify(songs)}`);
+        const songs = results.map(row => ({
+            id: row.id,
+            artist: row.artist,
+            title: row.title,
+            year: row.year,
+            ranking: row.ranking,
+            releaseYear: null,
+            inLibrary: true,
+            gameNum: null,
+            gameCat: null
+        }));
 
         return NextResponse.json(songs, { status: 200 });
     } catch (error) {

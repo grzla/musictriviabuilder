@@ -1,6 +1,6 @@
 import { SongParams } from '@/types';
 import { NextRequest, NextResponse } from 'next/server';
-import { removeFeaturingAnd } from '@/lib/actions/song.actions';
+import { normalizeArtist } from '@/lib/utils/string';
 
 async function getSpotifyAccessToken(): Promise<string | null> {
   try {
@@ -45,7 +45,7 @@ async function getValidSpotifyAccessToken(): Promise<string | null> {
 
 async function searchTrack(artist: string, title: string): Promise<string | null> {
     try {
-        const query = `artist:${encodeURIComponent(removeFeaturingAnd(artist))} track:${encodeURIComponent(title)}`;
+        const query = `artist:${encodeURIComponent(normalizeArtist(artist))} track:${encodeURIComponent(title)}`;
         const url = `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`;
 
         const response = await fetch(url, {

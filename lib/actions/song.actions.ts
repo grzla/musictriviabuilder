@@ -1,106 +1,6 @@
 import { SongParams } from "@/types";
-import { connectToSql } from "@/lib/db/mysql";
-import { PoolConnection } from 'mysql2/promise';
 
-/*
-  Compose a query to return a random song from the billboardsongs table based on the provided year.
-
-  Default behavior is to return a random song within the decade of the provided year.
-  If 'exactYear' is true, it returns a random song within that specific year. 
-  If year is not provided, it returns a random song from any year in the billboardsongs table. 
-  If libraryOnly is true, only returns songs that exist in the library.
-*/
-export const composeQuery = (year: number | null, exactYear: boolean = false, libraryOnly: boolean = false): string => {
-  let yearCondition = '';
-  let startYear: number | null = null;
-  let endYear: number | null = null;
-
-  if (year !== null) {
-    if (exactYear) {
-      yearCondition = `year = ${year}`;
-    } else {
-      // build the year condition
-      if (year < 1980) {
-        startYear = null;
-        endYear = 1979;
-      } else if (year >= 1980 && year <= 1989) {
-        startYear = 1980;
-        endYear = 1989;
-      } else if (year >= 1990 && year <= 1999) {
-        startYear = 1990;
-        endYear = 1999;
-      } else if (year >= 2000 && year <= 2009) {
-        startYear = 2000;
-        endYear = 2009;
-      } else if (year >= 2010) {
-        startYear = 2010;
-        endYear = null; // Current year
-      }
-      // build the year condition
-      yearCondition = startYear !== null && endYear !== null
-        ? `year BETWEEN ${startYear} AND ${endYear}`
-        : startYear !== null
-          ? `year >= ${startYear}`
-          : endYear !== null
-            ? `year <= ${endYear}`
-            : '';
-    }
-  }
-
-  // Base query for getting songs that haven't been used/banned/requested
-  const notExistsSubqueries = `
-    NOT EXISTS (
-      SELECT 1 FROM usedsongs u 
-      WHERE u.normalized_artist = b.normalized_artist 
-      AND u.normalized_title = b.normalized_title
-    )
-    AND NOT EXISTS (
-      SELECT 1 FROM donotplay d
-      WHERE d.normalized_artist = b.normalized_artist 
-      AND d.normalized_title = b.normalized_title
-    )
-    AND NOT EXISTS (
-      SELECT 1 FROM requests r
-      WHERE r.normalized_artist = b.normalized_artist 
-      AND r.normalized_title = b.normalized_title
-    )`;
-
-  // For replacements, only return songs that exist in the library
-  if (libraryOnly) {
-    return `
-      WITH available_songs AS (
-        SELECT b.*
-        FROM billboardsongs b
-        INNER JOIN librarysongs l ON 
-          l.normalized_artist = b.normalized_artist AND
-          l.normalized_title = b.normalized_title
-        WHERE ${notExistsSubqueries}
-        ${year !== null ? `AND b.${yearCondition}` : ''}
-      )
-      SELECT *
-      FROM available_songs
-      ORDER BY RAND()
-      LIMIT 1
-    `;
-  }
-
-  // For initial load, return any billboard song
-  return `
-    SELECT b.*
-    FROM billboardsongs b
-    WHERE ${notExistsSubqueries}
-    ${year !== null ? `AND b.${yearCondition}` : ''}
-    ORDER BY RAND()
-    LIMIT 1
-  `;
-};
-
-export const removeFeaturingAnd = (artist: string): string => {
-  // remove the rest of any part of the string which includes f. ft. feat. featuring and
-  return artist.replace(/\b(f\.?|ft\.?|feat\.?|featuring|and|&)\b.*$/gi, '').trim();
-}
-
-export const checkSongInLibrary = async (song: SongParams) => {
+export const checkSongInLibrary = async (song: SongParams): Promise<boolean> => {
   try {
     const response = await fetch("/api/matchsongtolibrary", {
       method: "POST",
@@ -124,48 +24,127 @@ export const checkSongInLibrary = async (song: SongParams) => {
 };
 
 export const matchSongToLibrary = async (song: SongParams): Promise<SongParams[]> => {
-  let connection: PoolConnection | null = null;
   try {
-    connection = await connectToSql();
+    const response = await fetch("/api/matchsongtolibrary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(song),
+    });
 
-    const { id } = song;
-
-    if (!id) {
-      return []
+    if (!response.ok) {
+      throw new Error("Failed to match song to library");
     }
 
-    // Use normalized columns for matching
-    const query = `
-      SELECT l.id, l.artist, l.title, l.year
-      FROM librarysongs l
-      JOIN billboardsongs b ON 
-        l.normalized_artist = b.normalized_artist AND
-        l.normalized_title = b.normalized_title
-      WHERE b.id = ?
-      LIMIT 10;
-    `;
-
-    const [results] = await connection.execute(query, [id]);
-
-    const songs: SongParams[] = (results as any[]).map(row => ({
-      id: row.id,
-      artist: row.artist,
-      title: row.title,
-      year: row.year,
-      ranking: null,
-      releaseYear: null,
-      inLibrary: null,
-      gameNum: null,
-      gameCat: null
-    }));
-
-    return songs;
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching songs:', error);
+    console.error('Error matching song to library:', error);
     return [];
-  } finally {
-    if (connection) {
-      connection.release();
+  }
+};
+
+export const fetchSongPreviews = async (songs: SongParams[]): Promise<string[]> => {
+  try {
+    const response = await fetch("/api/fetchpreviews", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(songs),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch previews');
     }
+
+    const data = await response.json();
+    return data.embeds;
+  } catch (error) {
+    console.error("Failed to fetch Spotify embeds:", error);
+    return [];
+  }
+};
+
+export const addSongToDoNotPlay = async (song: SongParams): Promise<void> => {
+  try {
+    const response = await fetch("/api/donotplay", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ song }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add song to do-not-play list');
+    }
+  } catch (error) {
+    console.error("Failed to add song to do-not-play list:", error);
+    throw error;
+  }
+};
+
+export const addSongToRequests = async (song: SongParams): Promise<void> => {
+  try {
+    const response = await fetch("/api/requests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ song }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add song to requests');
+    }
+  } catch (error) {
+    console.error("Error requesting song:", error);
+    throw error;
+  }
+};
+
+export const logSongSearchMismatch = async (song: SongParams): Promise<void> => {
+  try {
+    const response = await fetch("/api/searchmismatch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ song }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to log search mismatch');
+    }
+  } catch (error) {
+    console.error("Error logging search mismatch:", error);
+    throw error;
+  }
+};
+
+export const replaceSongInYear = async (song: SongParams): Promise<SongParams> => {
+  try {
+    const { year } = song;
+    const response = await fetch(`/api/song?year=${year}&libraryOnly=true`);
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch replacement song");
+    }
+    
+    const responseData = await response.json();
+    const newSong = {
+      ...responseData[0],
+      inLibrary: true // Song is guaranteed to be in library by our optimized query
+    };
+
+    if (!newSong || !newSong.id) {
+      throw new Error("Invalid song object returned from the API");
+    }
+
+    return newSong;
+  } catch (error) {
+    console.error("Failed to replace song:", error);
+    throw error;
   }
 };
