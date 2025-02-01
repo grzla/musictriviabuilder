@@ -78,14 +78,11 @@ function SortableItem({ song, index, ...props }: SortableItemProps) {
 
   return (
     <ListItem
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       onClick={(e) => props.handleItemClick(index, song)}
       onDoubleClick={(e) => props.handleDoubleClick(song)}
       sx={style}
       secondaryAction={
-        <div onClick={(e) => e.stopPropagation()}>
+        <div>
           <Tooltip title="Copy to clipboard">
             <IconButton
               edge="end"
@@ -184,25 +181,30 @@ function SortableItem({ song, index, ...props }: SortableItemProps) {
         </div>
       }
     >
-      <Box
-        sx={{
-          minWidth: '40px',
-          height: '40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'rgba(255, 255, 255, 0.5)',
-          color: '555555',
-          borderRadius: '5px',
-          marginRight: '16px',
-          paddingTop: '3px',
-          fontSize: '20px',
-          userSelect: 'none',
-        }}
-      >
-        {index + 1}
-      </Box>
-      <div style={{ flex: 1, userSelect: 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+        <Box
+          {...attributes}
+          {...listeners}
+          ref={setNodeRef}
+          data-handle="true"
+          sx={{
+            minWidth: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            color: '555555',
+            borderRadius: '5px',
+            marginRight: '16px',
+            paddingTop: '3px',
+            fontSize: '20px',
+            userSelect: 'none',
+            cursor: 'grab',
+          }}
+        >
+          {index + 1}
+        </Box>
         <ListItemText
           primary={song.title ?? "∅"}
           secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${song.year ?? "∅"
@@ -226,7 +228,20 @@ const BasicList: React.FC<BasicListProps> = ({
   const [isLoading, setIsLoading] = React.useState(true);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+        delay: 100, // Increased delay to better differentiate between clicks and drags
+        tolerance: 5,
+        modifiers: [
+          (event: { target: EventTarget }) => {
+            // Only allow drag to start if the initial click was on the number box
+            const target = event.target as HTMLElement;
+            return target.getAttribute('data-handle') === 'true';
+          },
+        ],
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
