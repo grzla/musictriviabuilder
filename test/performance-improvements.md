@@ -99,4 +99,30 @@ POST /api/matchsongtolibrary 200 in 200-800ms (average)
    - Add request debouncing
    - Optimize state management
 
-This document demonstrates significant performance improvements after implementing normalized columns and proper indexing. The most notable improvement is in the /api/round endpoint, which is now 98% faster. While there are still areas for optimization, particularly in connection management, the core functionality is now performing at an acceptable level.
+This document demonstrates significant performance improvements after implementing normalized columns, proper indexing, and connection pooling optimizations. The most notable improvements are:
+
+1. Query Performance:
+   - /api/round endpoint is now 98% faster
+   - Normalized columns and indexes are working effectively
+   - Core functionality performing at acceptable levels
+
+2. Connection Pooling (Added February 1, 2025):
+   - Implemented singleton connection manager
+   - Proper connection reuse and lifecycle management
+   - Connection metrics and debugging in development
+   - Configuration optimized:
+     * Connection limit: 10
+     * Queue limit: 0 (unlimited)
+     * Idle timeout: 60 seconds
+     * Keep-alive enabled
+   
+3. Connection Performance Metrics:
+   - Connections are properly pooled and reused
+   - Maximum observed active connections: 6
+   - Connection establishment overhead eliminated
+   - /api/matchsongtolibrary performance:
+     * Initial requests: ~600ms
+     * Subsequent requests: 40-100ms (85% improvement)
+   - No more redundant connection creation
+
+The application now demonstrates both efficient query performance and proper connection management, leading to more consistent and reliable performance across all endpoints.
