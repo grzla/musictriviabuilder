@@ -1,10 +1,25 @@
 import * as React from "react";
 import { SongParams } from "@/types";
 import { Box, CircularProgress, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
-import { AddTask, Autorenew, Attachment, Check, ContentPaste, Delete, DoNotDisturb, ArrowUpward, ArrowDownward, SearchOff } from "@mui/icons-material";
+import { AddTask, Autorenew, Attachment, Check, ContentPaste, Delete, DoNotDisturb, SearchOff } from "@mui/icons-material";
 import { GameCat } from "@/types/index.js";
-
-
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface BasicListProps {
   songlist: {
@@ -20,6 +35,184 @@ interface BasicListProps {
   setEmbeds: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
+interface SortableItemProps extends Omit<BasicListProps, 'songlist' | 'setSonglist'> {
+  song: SongParams;
+  index: number;
+  handleItemClick: (index: number, song: SongParams) => void;
+  handleDoubleClick: (song: SongParams) => void;
+  confirmInLibrary: (index: number) => void;
+  logSearchMismatch: (song: SongParams) => Promise<void>;
+  copyToClipboard: (song: SongParams) => void;
+  replaceSong: (song: SongParams) => Promise<void>;
+  donotplay: (song: SongParams) => Promise<void>;
+  addToRequests: (song: SongParams) => Promise<void>;
+  deleteSong: (index: number) => void;
+  sendSongToList: (index: number) => Promise<void>;
+}
+
+function SortableItem({ song, index, ...props }: SortableItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: song.id.toString() });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 1 : 0,
+    position: 'relative' as const,
+    backgroundColor: song.inLibrary ? "lightgreen" : "lightcoral",
+    margin: '1px 0',
+    borderRadius: '6px',
+    cursor: isDragging ? 'grabbing' : 'grab',
+    opacity: isDragging ? 0.8 : 1,
+    boxShadow: isDragging ? '0 5px 10px rgba(0,0,0,0.2)' : 'none',
+    '&:hover': {
+      backgroundColor: song.inLibrary ? "#90EE90" : "#F08080",
+    },
+  };
+
+  return (
+    <ListItem
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={(e) => props.handleItemClick(index, song)}
+      onDoubleClick={(e) => props.handleDoubleClick(song)}
+      sx={style}
+      secondaryAction={
+        <div onClick={(e) => e.stopPropagation()}>
+          <Tooltip title="Copy to clipboard">
+            <IconButton
+              edge="end"
+              aria-label="copy"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.copyToClipboard(song);
+              }}
+            >
+              <ContentPaste />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Replace">
+            <IconButton
+              edge="end"
+              aria-label="replace"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.replaceSong(song);
+              }}
+            >
+              <Autorenew />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Confirm in library">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                props.confirmInLibrary(index);
+                props.logSearchMismatch(song);
+              }}
+            >
+              <Check />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Log search mismatch">
+            <IconButton
+              edge="end"
+              aria-label="search mismatch"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.logSearchMismatch(song);
+              }}
+            >
+              <SearchOff />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Do not play">
+            <IconButton
+              edge="end"
+              aria-label="ban"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.donotplay(song);
+              }}
+            >
+              <DoNotDisturb />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Add to requests">
+            <IconButton
+              edge="end"
+              aria-label="queue"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.addToRequests(song);
+              }}
+            >
+              <AddTask />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Remove from list">
+            <IconButton
+              edge="end"
+              aria-label="delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.deleteSong(index);
+              }}
+            >
+              <Delete />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Send to other list">
+            <IconButton
+              edge="end"
+              aria-label="Send"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.sendSongToList(index);
+              }}
+            >
+              <Attachment />
+            </IconButton>
+          </Tooltip>
+        </div>
+      }
+    >
+      <Box
+        sx={{
+          minWidth: '40px',
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(255, 255, 255, 0.5)',
+          color: '555555',
+          borderRadius: '5px',
+          marginRight: '16px',
+          paddingTop: '3px',
+          fontSize: '20px',
+          userSelect: 'none',
+        }}
+      >
+        {index + 1}
+      </Box>
+      <div style={{ flex: 1, userSelect: 'none' }}>
+        <ListItemText
+          primary={song.title ?? "∅"}
+          secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${song.year ?? "∅"
+            } | ${song.releaseYear ?? "∅"}`}
+        />
+      </div>
+    </ListItem>
+  );
+}
+
 const BasicList: React.FC<BasicListProps> = ({
   songlist,
   setSonglist,
@@ -32,6 +225,35 @@ const BasicList: React.FC<BasicListProps> = ({
   const [selectedItem, setSelectedItem] = React.useState<number | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      setSonglist((prevSonglist) => {
+        const oldIndex = prevSonglist[currentRound].findIndex(
+          (song) => song.id.toString() === active.id
+        );
+        const newIndex = prevSonglist[currentRound].findIndex(
+          (song) => song.id.toString() === over.id
+        );
+
+        return {
+          ...prevSonglist,
+          [currentRound]: arrayMove(prevSonglist[currentRound], oldIndex, newIndex),
+        };
+      });
+    }
+  };
+
+  // Keep all the existing functions
   const fetchEmbeds = async () => {
     try {
       const response = await fetch("/api/fetchpreviews", {
@@ -48,6 +270,7 @@ const BasicList: React.FC<BasicListProps> = ({
       console.error("Failed to fetch Spotify embeds:", error);
     }
   };
+
   React.useEffect(() => {
     const confirmSongsInLibrary = async () => {
       try {
@@ -97,36 +320,6 @@ const BasicList: React.FC<BasicListProps> = ({
       console.error("Error fetching library matches:", error);
       return false;
     }
-  };
-
-  const moveItemUp = (index: number) => {
-    if (index === 0) return; // Can't move the first item up
-    setSonglist((prevSonglist) => {
-      const newSongs = [...prevSonglist[currentRound]];
-      [newSongs[index - 1], newSongs[index]] = [
-        newSongs[index],
-        newSongs[index - 1],
-      ];
-      return {
-        ...prevSonglist,
-        [currentRound]: newSongs
-      };
-    });
-  };
-
-  const moveItemDown = (index: number) => {
-    setSonglist((prevSonglist) => {
-      if (index === prevSonglist[currentRound].length - 1) return prevSonglist; // Can't move the last item down
-      const newSongs = [...prevSonglist[currentRound]];
-      [newSongs[index + 1], newSongs[index]] = [
-        newSongs[index],
-        newSongs[index + 1],
-      ];
-      return {
-        ...prevSonglist,
-        [currentRound]: newSongs
-      };
-    });
   };
 
   const replaceSong = async (song: SongParams) => {
@@ -250,8 +443,6 @@ const BasicList: React.FC<BasicListProps> = ({
       updatedSongs[currentRound] = updatedSongs[currentRound].map((song, i) =>
         i === index ? { ...song, inLibrary: true } : song
       );
-      // const song = updatedSongs[currentRound][index];
-      // logSearchMismatch(song);
       return updatedSongs;
     });
   };
@@ -339,146 +530,48 @@ const BasicList: React.FC<BasicListProps> = ({
     // Call replaceSong with the song that was sent to the other list
     await replaceSong(songlist[currentRound][index]);
   };
+
   if (isLoading) {
     return <CircularProgress />;
   }
 
   return (
     <Box>
-      <List>
-        {songlist[currentRound].map((song, index) => (
-          <ListItem
-            key={`${song.id}-${index}`}
-            dense
-            onClick={() => handleItemClick(index, song)}
-            onDoubleClick={() => handleDoubleClick(song)}
-            style={{
-              backgroundColor: song.inLibrary ? "lightgreen" : "lightcoral",
-              margin: '1px 0', // Add margin to the top and bottom
-              borderRadius: '6px', // Add beveled corners
-            }}
-            secondaryAction={
-              <>
-                <Tooltip title="Copy to clipboard">
-                  <IconButton
-                    edge="end"
-                    aria-label="copy"
-                    onClick={() => copyToClipboard(song)}
-                  >
-                    <ContentPaste />
-                  </IconButton>
-                </Tooltip>
-                <IconButton
-                  edge="end"
-                  aria-label="move up"
-                  onClick={() => moveItemUp(index)}
-                >
-                  <ArrowUpward />
-                </IconButton>
-                <IconButton
-                  edge="end"
-                  aria-label="move down"
-                  onClick={() => moveItemDown(index)}
-                >
-                  <ArrowDownward />
-                </IconButton>
-                <Tooltip title="Replace">
-                  <IconButton
-                    edge="end"
-                    aria-label="replace"
-                    onClick={() => replaceSong(song)}
-                  >
-                    <Autorenew />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Confirm in library">
-                  <IconButton
-                    onClick={() => {
-                      confirmInLibrary(index);
-                      const song = songlist[currentRound][index];
-                      logSearchMismatch(song);
-                    }}
-                  >
-                    <Check />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Log search mismatch">
-                  <IconButton
-                    edge="end"
-                    aria-label="search mismatch"
-                    onClick={() => logSearchMismatch(song)}
-                  >
-                    <SearchOff />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Do not play">
-                  <IconButton
-                    edge="end"
-                    aria-label="ban"
-                    onClick={() => donotplay(song)}
-                  >
-                    <DoNotDisturb />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Add to requests">
-                  <IconButton
-                    edge="end"
-                    aria-label="queue"
-                    onClick={() => addToRequests(song)}
-                  >
-                    <AddTask />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Remove from list">
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={() => deleteSong(index)}
-                  >
-                    <Delete />
-                  </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Send to other list">
-                  <IconButton
-                    edge="end"
-                    aria-label="Send"
-                    onClick={() => sendSongToList(index)}
-                  >
-                    <Attachment />
-                  </IconButton>
-                </Tooltip>
-              </>
-            }
-          >
-            <Box
-              sx={{
-                minWidth: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.5)', // 50% transparent white
-                color: '555555',
-                borderRadius: '5px',
-                marginRight: '16px',
-                paddingTop: '3px',
-                fontSize: '20px', // Increased font size
-                userSelect: 'none',
-              }}
-            >
-              {index + 1}
-            </Box>
-            <div style={{ flex: 1, userSelect: 'none' }}>
-              <ListItemText
-                primary={song.title ?? "∅"}
-                secondary={`${song.artist ?? "∅"} | ${song.ranking ?? "∅"} | ${song.year ?? "∅"
-                  } | ${song.releaseYear ?? "∅"}`}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={songlist[currentRound].map(song => song.id.toString())}
+          strategy={verticalListSortingStrategy}
+        >
+          <List sx={{ width: '100%' }}>
+            {songlist[currentRound].map((song, index) => (
+              <SortableItem
+                key={song.id}
+                song={song}
+                index={index}
+                searchResults={searchResults}
+                setSearchResults={setSearchResults}
+                currentRound={currentRound}
+                embeds={embeds}
+                setEmbeds={setEmbeds}
+                handleItemClick={handleItemClick}
+                handleDoubleClick={handleDoubleClick}
+                confirmInLibrary={confirmInLibrary}
+                logSearchMismatch={logSearchMismatch}
+                copyToClipboard={copyToClipboard}
+                replaceSong={replaceSong}
+                donotplay={donotplay}
+                addToRequests={addToRequests}
+                deleteSong={deleteSong}
+                sendSongToList={sendSongToList}
               />
-            </div>
-          </ListItem>
-        ))}
-      </List>
+            ))}
+          </List>
+        </SortableContext>
+      </DndContext>
     </Box>
   );
 };
