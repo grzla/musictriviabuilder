@@ -12,8 +12,8 @@ export const normalizeArtist = (artist: string): string => {
     .replace(/^(The |A )/, '')
     // Remove apostrophes
     .replace(/['']/g, '')
-    // Remove featuring artists
-    .replace(/\s*(f\.?|ft\.?|feat\.?|featuring|and|&).*$/, '')
+    // Remove featuring artists and anything after 'and'
+    .replace(/\s*(\b(f|ft|feat|featuring)\b\.?|\s+and\s+|&).*$/, '')
     // Replace special characters with spaces
     .replace(/[\(\)\?\/,\.\[\]]/g, ' ')
     // Replace multiple spaces with single space
