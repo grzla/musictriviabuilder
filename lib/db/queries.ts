@@ -16,8 +16,11 @@ export const composeQuery = (year: number | null, exactYear: boolean = false, li
       yearCondition = `year = ${year}`;
     } else {
       // build the year condition
-      if (year < 1980) {
+      if (year < 1970) {
         startYear = null;
+        endYear = 1969;
+      } else if (year >= 1970 && year <= 1979) {
+        startYear = 1970;
         endYear = 1979;
       } else if (year >= 1980 && year <= 1989) {
         startYear = 1980;
