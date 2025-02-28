@@ -111,7 +111,7 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
     });
   };
 
-  const handleAISort = async () => {
+  const handleGetYear = async () => {
     setIsReordering(true);
     try {
       const response = await fetch("/api/aireorder", {
@@ -158,8 +158,8 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
     // { name: "Reload", handler: handleReload },
     { name: currentRound === 'namethattune' ? 'NameThat' : currentRound === 'decades' ? 'Decades' : currentRound, handler: handleSwitch },
     { name: "Shuffle", handler: handleShuffle },
-    { name: "AI reorder", handler: handleAISort },
     { name: "Export", handler: handleExport },
+    { name: "Get Year", handler: handleGetYear },
     { name: "Finalize", handler: handleOpenModal }
   ];
 
@@ -231,9 +231,9 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
                     key={name}
                     color="inherit"
                     onClick={handler}
-                    disabled={name === "AI reorder" && isReordering}
+                    disabled={name === "Get Year" && isReordering}
                   >
-                    {name === "AI reorder" && isReordering ? "Reordering..." : name}
+                    {name === "Get Year" && isReordering ? "Reordering..." : name}
                   </Button>
                 ))}
               </Box>
