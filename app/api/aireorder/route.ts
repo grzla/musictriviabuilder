@@ -10,19 +10,23 @@ const openai = new OpenAI({
 
 
 export async function POST(request: NextRequest) {
-  const { songs }: { songs: SongParams[] } = await request.json();
+  const { nameThatTuneSongs, decadesSongs }: { 
+    nameThatTuneSongs: SongParams[],
+    decadesSongs: SongParams[] 
+  } = await request.json();
 
-  const songlist = songs.map(song => `${song.artist} - ${song.title})`).join('\n');
-  
-  const prompt = `
-  Here is a list of songs. Retrieve the original release year of each song. 
-  Return the result as a JSON array of objects, each with the fields: "artist", "title", and "releaseYear".
+  // Process both songlists
+  const processRoundSongs = async (songs: SongParams[]) => {
+    const songlist = songs.map(song => `${song.artist} - ${song.title})`).join('\n');
+    
+    const prompt = `
+    Here is a list of songs. Retrieve the original release year of each song. 
+    Return the result as a JSON array of objects, each with the fields: "artist", "title", and "releaseYear".
 
-  Songs:
-  ${songlist}
-`;
+    Songs:
+    ${songlist}
+    `;
 
-  try {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -34,28 +38,31 @@ export async function POST(request: NextRequest) {
 
     const content = response.choices[0].message.content;
     if (!content) {
-      return NextResponse.json({ message: 'Empty response from API' }, { status: 500 });
+      throw new Error('Empty response from API');
     }
-
-    console.log('Raw API response:', content);
 
     // Try to extract JSON from the content
     const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      const jsonContent = jsonMatch[0];
-      console.log('Extracted JSON:', jsonContent);
-      
-      try {
-        const parsedContent = JSON.parse(jsonContent);
-        return NextResponse.json({ reorderedSongs: parsedContent });
-      } catch (parseError) {
-        console.error('Error parsing JSON:', parseError);
-        return NextResponse.json({ message: 'Invalid JSON returned from API' }, { status: 500 });
-      }
-    } else {
-      console.error('No valid JSON found in the API response');
-      return NextResponse.json({ message: 'No valid JSON found in API response' }, { status: 500 });
+    if (!jsonMatch) {
+      throw new Error('No valid JSON found in API response');
     }
+
+    const jsonContent = jsonMatch[0];
+    return JSON.parse(jsonContent);
+  };
+
+  try {
+    // Process both rounds in parallel
+    const [nameThatTuneResult, decadesResult] = await Promise.all([
+      processRoundSongs(nameThatTuneSongs),
+      processRoundSongs(decadesSongs)
+    ]);
+
+    return NextResponse.json({ 
+      nameThatTuneSongs: nameThatTuneResult,
+      decadesSongs: decadesResult
+    });
+
   } catch (error) {
     console.error('Error:', error);
     // Add more detailed error logging

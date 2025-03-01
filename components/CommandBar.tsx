@@ -34,7 +34,7 @@ const SpotifyPlayer = memo(({ embed }: { embed: string }) => {
 
 function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embeds, setEmbeds }: CommandBarProps) {
   const [open, setOpen] = useState(false);
-  const [isReordering, setIsReordering] = useState(false);
+  const [isGettingYear, setIsGettingYear] = useState(false);
 
   const handleReload = () => {
     console.log("Reload action");
@@ -112,37 +112,44 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
   };
 
   const handleGetYear = async () => {
-    setIsReordering(true);
+    setIsGettingYear(true);
     try {
       const response = await fetch("/api/aireorder", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ songs: songlist[currentRound] }),
+        body: JSON.stringify({
+          nameThatTuneSongs: songlist.namethattune,
+          decadesSongs: songlist.decades
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to reorder songs");
+        throw new Error("Failed to get song years");
       }
 
       const result = await response.json();
 
-      // Update the songlist with the new order and releaseYear
-      const updatedSonglist = result.reorderedSongs.map((reorderedSong: { artist: string; title: string; releaseYear: number }) => {
-        const originalSong = songlist[currentRound].find(song => song.artist === reorderedSong.artist && song.title === reorderedSong.title);
-        return originalSong ? { ...originalSong, releaseYear: reorderedSong.releaseYear } : originalSong;
-      });
+      // Update both songlists with the new order and releaseYear
+      const updateSongs = (originalSongs: SongParams[], reorderedSongs: { artist: string; title: string; releaseYear: number }[]) => {
+        return reorderedSongs.map(reorderedSong => {
+          const originalSong = originalSongs.find(song => 
+            song.artist === reorderedSong.artist && song.title === reorderedSong.title
+          );
+          return originalSong ? { ...originalSong, releaseYear: reorderedSong.releaseYear } : null;
+        }).filter(song => song !== null) as SongParams[];
+      };
 
-      setSonglist(prevList => ({
-        ...prevList,
-        [currentRound]: updatedSonglist
-      }));
-      console.log("Songs reordered by AI:", updatedSonglist);
+      setSonglist({
+        namethattune: updateSongs(songlist.namethattune, result.nameThatTuneSongs),
+        decades: updateSongs(songlist.decades, result.decadesSongs)
+      });
+      console.log("Song years retrieved by AI:", result);
     } catch (error) {
-      console.error("Error reordering songs:", error);
+      console.error("AI error getting year:", error);
     } finally {
-      setIsReordering(false);
+      setIsGettingYear(false);
     }
   };
 
@@ -204,19 +211,6 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
               height: '80px', // match the height of the embed box
             }}
           >
-            {/* <Box
-              sx={{
-                height: '50%', // take up half the height
-                display: 'flex',
-                alignItems: 'flex-end', // Changed from 'left' to 'center' for vertical alignment
-                paddingLeft: 4,
-              }}
-            >
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                GAME
-              </Typography>
-            </Box> */}
-
             <Toolbar
               variant="dense"
               sx={{
@@ -231,16 +225,14 @@ function CommandBar({ songlist, setSonglist, currentRound, setCurrentRound, embe
                     key={name}
                     color="inherit"
                     onClick={handler}
-                    disabled={name === "Get Year" && isReordering}
+                    disabled={name === "Get Year" && isGettingYear}
                   >
-                    {name === "Get Year" && isReordering ? "Reordering..." : name}
+                    {name === "Get Year" && isGettingYear ? "Getting year..." : name}
                   </Button>
                 ))}
               </Box>
             </Toolbar>
-
           </Box>
-
         </Box>
       </AppBar>
       <Dialog
